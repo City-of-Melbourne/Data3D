@@ -1,0 +1,449 @@
+/*!-----------------------------------------------------------------------------
+   Master Stylesheet.
+
+   Project:       Web Boilerplate
+   Version:       2.0.2
+   Contributors:  Sebastian Prein <basti@gridonic.ch>
+   URL:           http://my-web-app.io
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   The meta folder holds files which only have functions, mixins, variables and
+   other definitions which do NOT compile to CSS.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Define your global functions in here!
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Breakpoint and media query related functions.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Define your global mixins in here!
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Define your color palette over here.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Color associations.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Typography.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Resolution relative settings. Excerpt from Google web fundamentals:
+
+   - Create breakpoints based on content, never on specific devices, products,
+     or brands.
+   - Design for the smallest mobile device first, then progressively enhance
+     the experience as more screen real estate becomes available.
+   - Keep lines of text to a maximum of around 70 or 80 characters.
+
+   https://goo.gl/EDZOAH
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Global grid.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Z-index listing.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Define your global selectors in here!
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   All styles from third party applications, frameworks and libraries.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   All styles which are used throughout the whole website get in here.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Global debugging styles.
+   -------------------------------------------------------------------------- */
+.debug-mode {
+  position: relative; }
+  .debug-mode::after {
+    background-color: transparent;
+    background-image: linear-gradient(transparent calc(100% - 1px), rgba(0, 0, 0, 0.05) 0%), linear-gradient(transparent calc(100% - 1px), rgba(0, 0, 0, 0.05) 0%);
+    background-size: 1px 1.5rem, 1px 0.75rem;
+    bottom: 0;
+    content: "baseline grid (factor: 1.5rem)";
+    left: 0;
+    position: absolute;
+    right: 0;
+    text-indent: 0.75rem;
+    top: 0;
+    z-index: -1; }
+  .debug-mode::before {
+    background: #fafaaa;
+    color: #000;
+    right: 0;
+    padding: 0 0.75rem;
+    position: fixed;
+    top: 0;
+    z-index: 500; }
+    @media (min-width: 20rem) {
+      .debug-mode::before {
+        content: "mobile-s (min-width: 20rem)"; } }
+    @media (min-width: 23.4375rem) {
+      .debug-mode::before {
+        content: "mobile-m (min-width: 23.4375rem)"; } }
+    @media (min-width: 26.5625rem) {
+      .debug-mode::before {
+        content: "mobile-l (min-width: 26.5625rem)"; } }
+    @media (min-width: 48rem) {
+      .debug-mode::before {
+        content: "tablet (min-width: 48rem)"; } }
+    @media (min-width: 64rem) {
+      .debug-mode::before {
+        content: "laptop (min-width: 64rem)"; } }
+    @media (min-width: 90rem) {
+      .debug-mode::before {
+        content: "laptop-l (min-width: 90rem)"; } }
+    @media (min-width: 160rem) {
+      .debug-mode::before {
+        content: "4k (min-width: 160rem)"; } }
+
+/* -----------------------------------------------------------------------------
+   Generic styles.
+   -------------------------------------------------------------------------- */
+:root {
+  box-sizing: border-box; }
+
+*,
+*:before,
+*:after {
+  background-color: inherit;
+  border-color: inherit;
+  box-sizing: inherit; }
+
+html, body {
+  height: 100%;
+  margin: 0; }
+
+body {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-justify-content: center;
+      -ms-flex-pack: center;
+          justify-content: center; }
+
+#map {
+  width: 100%;
+  height: 100%; }
+
+#caption {
+  position: absolute;
+  top: 1em;
+  width: 400px;
+  padding: 1em;
+  background: rgba(255, 255, 255, 0.8); }
+
+/* -----------------------------------------------------------------------------
+   Global application grid.
+   -------------------------------------------------------------------------- */
+.grid-container {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 58.75rem;
+  overflow: hidden;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem; }
+
+.grid-row {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+      -ms-flex-wrap: wrap;
+          flex-wrap: wrap;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem; }
+  .grid-row > .column {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    width: 100%; }
+    @media (min-width: 20rem) {
+      .grid-row > .column.-ms-1 {
+        width: 8.33333%; }
+      .grid-row > .column.-ms-2 {
+        width: 16.66667%; }
+      .grid-row > .column.-ms-3 {
+        width: 25%; }
+      .grid-row > .column.-ms-4 {
+        width: 33.33333%; }
+      .grid-row > .column.-ms-5 {
+        width: 41.66667%; }
+      .grid-row > .column.-ms-6 {
+        width: 50%; }
+      .grid-row > .column.-ms-7 {
+        width: 58.33333%; }
+      .grid-row > .column.-ms-8 {
+        width: 66.66667%; }
+      .grid-row > .column.-ms-9 {
+        width: 75%; }
+      .grid-row > .column.-ms-10 {
+        width: 83.33333%; }
+      .grid-row > .column.-ms-11 {
+        width: 91.66667%; }
+      .grid-row > .column.-ms-12 {
+        width: 100%; } }
+    @media (min-width: 23.4375rem) {
+      .grid-row > .column.-mm-1 {
+        width: 8.33333%; }
+      .grid-row > .column.-mm-2 {
+        width: 16.66667%; }
+      .grid-row > .column.-mm-3 {
+        width: 25%; }
+      .grid-row > .column.-mm-4 {
+        width: 33.33333%; }
+      .grid-row > .column.-mm-5 {
+        width: 41.66667%; }
+      .grid-row > .column.-mm-6 {
+        width: 50%; }
+      .grid-row > .column.-mm-7 {
+        width: 58.33333%; }
+      .grid-row > .column.-mm-8 {
+        width: 66.66667%; }
+      .grid-row > .column.-mm-9 {
+        width: 75%; }
+      .grid-row > .column.-mm-10 {
+        width: 83.33333%; }
+      .grid-row > .column.-mm-11 {
+        width: 91.66667%; }
+      .grid-row > .column.-mm-12 {
+        width: 100%; } }
+    @media (min-width: 26.5625rem) {
+      .grid-row > .column.-ml-1 {
+        width: 8.33333%; }
+      .grid-row > .column.-ml-2 {
+        width: 16.66667%; }
+      .grid-row > .column.-ml-3 {
+        width: 25%; }
+      .grid-row > .column.-ml-4 {
+        width: 33.33333%; }
+      .grid-row > .column.-ml-5 {
+        width: 41.66667%; }
+      .grid-row > .column.-ml-6 {
+        width: 50%; }
+      .grid-row > .column.-ml-7 {
+        width: 58.33333%; }
+      .grid-row > .column.-ml-8 {
+        width: 66.66667%; }
+      .grid-row > .column.-ml-9 {
+        width: 75%; }
+      .grid-row > .column.-ml-10 {
+        width: 83.33333%; }
+      .grid-row > .column.-ml-11 {
+        width: 91.66667%; }
+      .grid-row > .column.-ml-12 {
+        width: 100%; } }
+    @media (min-width: 48rem) {
+      .grid-row > .column.-tb-1 {
+        width: 8.33333%; }
+      .grid-row > .column.-tb-2 {
+        width: 16.66667%; }
+      .grid-row > .column.-tb-3 {
+        width: 25%; }
+      .grid-row > .column.-tb-4 {
+        width: 33.33333%; }
+      .grid-row > .column.-tb-5 {
+        width: 41.66667%; }
+      .grid-row > .column.-tb-6 {
+        width: 50%; }
+      .grid-row > .column.-tb-7 {
+        width: 58.33333%; }
+      .grid-row > .column.-tb-8 {
+        width: 66.66667%; }
+      .grid-row > .column.-tb-9 {
+        width: 75%; }
+      .grid-row > .column.-tb-10 {
+        width: 83.33333%; }
+      .grid-row > .column.-tb-11 {
+        width: 91.66667%; }
+      .grid-row > .column.-tb-12 {
+        width: 100%; } }
+    @media (min-width: 64rem) {
+      .grid-row > .column.-lp-1 {
+        width: 8.33333%; }
+      .grid-row > .column.-lp-2 {
+        width: 16.66667%; }
+      .grid-row > .column.-lp-3 {
+        width: 25%; }
+      .grid-row > .column.-lp-4 {
+        width: 33.33333%; }
+      .grid-row > .column.-lp-5 {
+        width: 41.66667%; }
+      .grid-row > .column.-lp-6 {
+        width: 50%; }
+      .grid-row > .column.-lp-7 {
+        width: 58.33333%; }
+      .grid-row > .column.-lp-8 {
+        width: 66.66667%; }
+      .grid-row > .column.-lp-9 {
+        width: 75%; }
+      .grid-row > .column.-lp-10 {
+        width: 83.33333%; }
+      .grid-row > .column.-lp-11 {
+        width: 91.66667%; }
+      .grid-row > .column.-lp-12 {
+        width: 100%; } }
+    @media (min-width: 90rem) {
+      .grid-row > .column.-lpl-1 {
+        width: 8.33333%; }
+      .grid-row > .column.-lpl-2 {
+        width: 16.66667%; }
+      .grid-row > .column.-lpl-3 {
+        width: 25%; }
+      .grid-row > .column.-lpl-4 {
+        width: 33.33333%; }
+      .grid-row > .column.-lpl-5 {
+        width: 41.66667%; }
+      .grid-row > .column.-lpl-6 {
+        width: 50%; }
+      .grid-row > .column.-lpl-7 {
+        width: 58.33333%; }
+      .grid-row > .column.-lpl-8 {
+        width: 66.66667%; }
+      .grid-row > .column.-lpl-9 {
+        width: 75%; }
+      .grid-row > .column.-lpl-10 {
+        width: 83.33333%; }
+      .grid-row > .column.-lpl-11 {
+        width: 91.66667%; }
+      .grid-row > .column.-lpl-12 {
+        width: 100%; } }
+
+/* -----------------------------------------------------------------------------
+   Common font weights.
+   http://www.w3.org/TR/css3-fonts/#font-weight-prop
+
+   100 - Thin
+   200 - Extra Light (Ultra Light)
+   300 - Light
+   400 - Normal
+   500 - Medium
+   600 - Semi Bold (Demi Bold)
+   700 - Bold
+   800 - Extra Bold (Ultra Bold)
+   900 - Black (Heavy)
+   -------------------------------------------------------------------------- */
+:root {
+  color: #000;
+  font-family: Tahoma, Verdana, Segoe, sans-serif;
+  font-size: 16px;
+  line-height: 1.5rem;
+  text-rendering: optimizeLegibility; }
+
+:root {
+  color: #000;
+  font-family: Tahoma, Verdana, Segoe, sans-serif;
+  font-size: 16px;
+  line-height: 1.5rem;
+  text-rendering: optimizeLegibility; }
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6 {
+  color: #3c3c3b;
+  font-family: Georgia, Times, Times New Roman, serif;
+  margin-top: 0;
+  margin-bottom: 0; }
+
+h1, .h1 {
+  font-size: 2rem;
+  line-height: 3rem; }
+
+h2, .h2 {
+  font-size: 1.5rem;
+  line-height: 2.25rem; }
+
+h3, .h3 {
+  font-size: 1.25rem; }
+
+h4, .h4 {
+  font-size: 1.125rem; }
+
+h5, .h5 {
+  font-size: 1rem; }
+
+p, .paragraph {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem; }
+
+.text-center {
+  text-align: center; }
+
+.text-right {
+  text-align: right; }
+
+/* -----------------------------------------------------------------------------
+   Print styles.
+   Inlined to avoid the additional HTTP request:
+   http://www.phpied.com/delay-loading-your-print-css/
+   -------------------------------------------------------------------------- */
+@media print {
+  *,
+  *::before,
+  *::after,
+  *::first-letter,
+  *::first-line {
+    background: transparent !important;
+    color: #000 !important;
+    /* Black prints faster:
+                                   http://www.sanbeiji.com/archives/953 */
+    box-shadow: none !important;
+    text-shadow: none !important; }
+  a,
+  a:visited {
+    text-decoration: underline; }
+  a[href]::after {
+    content: " (" attr(href) ")"; }
+  abbr[title]::after {
+    content: " (" attr(title) ")"; }
+  /*
+     * Don't show links that are fragment identifiers,
+     * or use the `javascript:` pseudo protocol
+     */
+  a[href^="#"]::after,
+  a[href^="javascript:"]::after {
+    content: ""; }
+  pre,
+  blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid; }
+  /*
+     * Printing Tables:
+     * http://css-discuss.incutio.com/wiki/Printing_Tables
+     */
+  thead {
+    display: table-header-group; }
+  tr,
+  img {
+    page-break-inside: avoid; }
+  img {
+    max-width: 100% !important; }
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3; }
+  h2,
+  h3 {
+    page-break-after: avoid; } }
+
+/* -----------------------------------------------------------------------------
+   Components are parts which are used among several views. For example those
+   could be buttons, banners, lists, dialogs and so on.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Global buttons.
+   -------------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------------
+   Sections are bigger parts of a specific view which mostly have a semantic
+   meaning as well. A section for example can be a simple container for a list
+   of components and this accumulation can be a specific type of content on the
+   other hand.
+   -------------------------------------------------------------------------- */
