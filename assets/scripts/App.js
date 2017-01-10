@@ -1099,8 +1099,9 @@ d3.csv('https://data.melbourne.vic.gov.au/api/views/sfrg-zygb/rows.csv?accessTyp
         map.addLayer(cafeLayer(1, ['all', ['>=', 'indoor', 15], ['<', 'indoor', 25]]));
         map.addLayer(cafeLayer(1.25, ['all', ['>=', 'indoor', 25], ['<', 'indoor', 75]]));
         map.addLayer(cafeLayer(1.5, ['all', ['>=', 'indoor', 75]]));
+        document.querySelectorAll('#loading')[0].outerHTML = '';
     };
-    if (map.loaded) addCafes();else map.on('load', addCafes);
+    if (map.loaded()) addCafes();else map.on('load', addCafes);
 });
 
 },{"d3-request":12,"mapbox-gl":94}],7:[function(require,module,exports){
