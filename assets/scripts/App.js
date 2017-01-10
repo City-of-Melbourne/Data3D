@@ -31014,7 +31014,7 @@ var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/stevage/cixqpi9cl004i2sokdme3g7lk',
     center: [144.9656, -37.813],
-    zoom: 16
+    zoom: 14
 });
 
 var points = {
@@ -31044,14 +31044,40 @@ function pointLayer(size, filter) {
 }
 
 var locationColumn;
+var locationIsPoint;
+
+function getLocationColumn(columns) {
+    var lc = columns.filter(function (col) {
+        return col.dataTypeName === 'location' || col.dataTypeName === 'point';
+    })[0];
+    if (lc.dataTypeName === 'point') locationIsPoint = true;
+    locationColumn = lc.name;
+}
+
+function locationToCoords(location) {
+    // "new backend" datasets use a WKT field [POINT (lon lat)] instead of (lat, lon)
+    if (locationIsPoint) {
+        return location.replace('POINT (', '').replace(')', '').split(' ').map(function (n) {
+            return Number(n);
+        });
+    } else {
+        return [Number(location.split(', ')[1].replace(')', '')), Number(location.split(', ')[0].replace('(', ''))];
+    }
+}
 
 var title;
 request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId + '.json').then(function (props) {
     document.querySelectorAll('#caption h1')[0].innerHTML = props.name;
     document.querySelectorAll('#source')[0].setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
-    locationColumn = props.columns.filter(function (col) {
-        return col.dataTypeName === 'location';
-    })[0].name;
+    if (props.newBackend && props.childViews.length > 0) {
+
+        dataId = props.childViews[0];
+
+        return request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId).then(function (props) {
+            return getLocationColumn(props.columns);
+        });
+    }
+    getLocationColumn(props.columns);
 }).then(function () {
     return d3.csv('https://data.melbourne.vic.gov.au/api/views/' + dataId + '/rows.csv?accessType=DOWNLOAD', function (rows) {
         rows.forEach(function (row) {
@@ -31061,7 +31087,7 @@ request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId + '.json
                     properties: row,
                     geometry: {
                         type: 'Point',
-                        coordinates: [Number(row[locationColumn].split(', ')[1].replace(')', '')), Number(row[locationColumn].split(', ')[0].replace('(', ''))]
+                        coordinates: locationToCoords(row[locationColumn])
                     }
                 };
                 points.features.push(feature);
