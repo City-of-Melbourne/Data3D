@@ -114,24 +114,6 @@
   border-color: inherit;
   box-sizing: inherit; }
 
-html, body {
-  margin: 0; }
-
-#map {
-  position: absolute;
-  width: 100%;
-  height: 100%; }
-
-#caption {
-  position: absolute;
-  top: 1em;
-  width: 400px;
-  left: calc(50% - 200px);
-  padding: 1em;
-  border: 1px solid lightgray;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0px 0px 4px 4px white; }
-
 /* -----------------------------------------------------------------------------
    Global application grid.
    -------------------------------------------------------------------------- */
@@ -442,3 +424,51 @@ p, .paragraph {
    of components and this accumulation can be a specific type of content on the
    other hand.
    -------------------------------------------------------------------------- */
+html, body {
+  margin: 0; }
+
+#map {
+  position: absolute;
+  width: 100%;
+  height: 100%; }
+
+#caption {
+  position: absolute;
+  top: 1em;
+  width: 400px;
+  left: calc(50% - 200px);
+  padding: 1em;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0px 0px 4px 4px white; }
+
+#caption h1 {
+  font-size: 1.5rem;
+  line-height: 1.5rem; }
+
+#features {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 350px;
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.8); }
+
+#features {
+  font-size: 12px; }
+  #features td {
+    padding: 0.25em 0.75em; }
+  #features table {
+    border-collapse: collapse; }
+  #features table td, #features table th {
+    border: 1px solid #eee; }
+  #features table tr:first-child th {
+    border-top: 0; }
+  #features table tr:last-child td {
+    border-bottom: 0; }
+  #features table tr td:first-child,
+  #features table tr th:first-child {
+    border-left: 0; }
+  #features table tr td:last-child,
+  #features table tr th:last-child {
+    border-right: 0; }
