@@ -1040,8 +1040,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJia
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/stevage/cixqpi9cl004i2sokdme3g7lk',
-    center: [144.95, -37.8],
-    zoom: 14
+    center: [144.9656, -37.813],
+    zoom: 16
 });
 
 var cafes = {
