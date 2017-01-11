@@ -472,3 +472,42 @@ html, body {
   #features table tr td:last-child,
   #features table tr th:last-child {
     border-right: 0; }
+
+#legends {
+  position: absolute;
+  top: 10px;
+  right: 360px; }
+
+.legend {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid grey;
+  padding: 4px;
+  max-width: 200px; }
+
+.legend h3 {
+  font-size: 14px; }
+
+.legend .box {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin-right: 5px;
+  margin-top: 2px;
+  border: 1px solid #333; }
+
+.legend .circle {
+  display: inline-block;
+  background: lightblue;
+  border: 1px solid #333;
+  margin-right: 10px; }
+
+.legend label {
+  vertical-align: top;
+  color: #444; }
+
+.legend .close {
+  background: #eee;
+  cursor: pointer;
+  text-align: right;
+  font-size: 12px;
+  margin-bottom: 1em; }
