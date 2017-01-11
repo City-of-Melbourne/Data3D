@@ -31026,9 +31026,20 @@ Bike share stations: http://localhost:3002/#tdvh-n9dv
 DAM: http://localhost:3002/#gh7s-qda8
 */
 
-var dataId = 'jduy-94rf';
+// known point datasets that work ok
+var choices = ['fp38-wiyy', 'ygaw-6rzq', '84bf-dihi', 'tdvh-n9dv', 'gh7s-qda8', 'sfrg-zygb', 'ew6k-chz4', '7vrd-4av5', // wayfinding
+'ss79-v558', // bus stops
+'mffi-m9yn', // pubs
+'svux-bada', // soil textures - nice one
+'fthy-zajy', // properties over $2.5m
+'tx8h-2jgi', // accessible toilets
+'6u5z-ubvh'];
+var dataId = void 0;
 if (window.location.hash) {
     dataId = window.location.hash.replace('#', '');
+} else {
+    dataId = choices[Math.floor(Math.random() * choices.length)];
+    document.querySelectorAll('#caption h1')[0].innerHTML = 'Loading random dataset...';
 }
 
 function pointLayer(filter, highlight) {
@@ -31038,13 +31049,14 @@ function pointLayer(filter, highlight) {
         source: 'dataset',
         paint: {
             'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
-            'circle-opacity': 0.8,
+            'circle-opacity': 0.95,
             'circle-radius': {
                 stops: highlight ? [[10, 4], [17, 10]] : [[10, 2], [17, 5]]
             }
         }
     };
     if (filter) ret.filter = filter;
+    //console.log(ret);
     return ret;
 }
 
@@ -31087,18 +31099,18 @@ function pickVisColumn(columnName) {
     var legendHtml;
     if (numericColumns.indexOf(columnName) >= 0) {
 
-        map.setPaintProperty('points', 'circle-radius', {
+        var radiusProps = {
             property: columnName,
-            stops: [
-            /*            [mins[columnName], 3],
-                        [maxs[columnName], 30]*/
-            [{ zoom: 10, value: mins[columnName] }, 1], [{ zoom: 10, value: maxs[columnName] }, 3], [{ zoom: 17, value: mins[columnName] }, 3], [{ zoom: 17, value: maxs[columnName] }, 10]]
-        });
+            stops: [[{ zoom: 10, value: mins[columnName] }, 1], [{ zoom: 10, value: maxs[columnName] }, 3], [{ zoom: 17, value: mins[columnName] }, 3], [{ zoom: 17, value: maxs[columnName] }, 10]]
+        };
+        console.log(radiusProps);
+        map.setPaintProperty('points', 'circle-radius', radiusProps);
 
         legendHtml = '<div class="close">Close ✖</div>' + ('<h3>' + columnName + '</h3>') + ('<span class="circle" style="height:6px; width: 6px; border-radius: 3px"></span><label>' + mins[columnName] + '</label><br/>') + ('<span class="circle" style="height:20px; width: 20px; border-radius: 10px"></span><label>' + maxs[columnName] + '</label>');
 
         document.querySelector('#legend-numeric').innerHTML = legendHtml;
         document.querySelector('#legend-numeric .close').addEventListener('click', function (e) {
+            console.log(pointLayer().paint['circle-radius']);
             map.setPaintProperty('points', 'circle-radius', pointLayer().paint['circle-radius']);
             document.querySelector('#legend-numeric').innerHTML = '';
         });
@@ -31127,8 +31139,8 @@ function pickVisColumn(columnName) {
         });
     }
 }
-
-var enumColors = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a'];
+// from ColorBrewer
+var enumColors = ['#1f78b4', '#fb9a99', '#b2df8a', '#33a02c', '#e31a1c', '#fdbf6f', '#a6cee3', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
 
 function locationToCoords(location) {
     // "new backend" datasets use a WKT field [POINT (lon lat)] instead of (lat, lon)
@@ -31145,7 +31157,7 @@ function computeSortedFrequencies() {
     textColumns.forEach(function (col) {
         sortedFrequencies[col] = Object.keys(frequencies[col]).sort(function (vala, valb) {
             return frequencies[col][vala] > frequencies[col][valb] ? 1 : -1;
-        }).slice(0, 10);
+        }).slice(0, 12);
         // ...slice(0,10)
     });
     console.log(sortedFrequencies);
