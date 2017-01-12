@@ -429,17 +429,16 @@ html, body {
 
 #map {
   position: absolute;
-  width: 100%;
+  width: calc(100% - 350px);
   height: 100%; }
 
 #caption {
   position: absolute;
   top: 1em;
-  width: 400px;
-  left: calc(50% - 200px);
+  width: 600px;
+  left: calc(50% - 300px - 175px);
   padding: 1em;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0px 0px 4px 4px white; }
+  background: #eee; }
 
 #caption h1 {
   font-size: 1.5rem;
@@ -452,26 +451,41 @@ html, body {
   bottom: 0;
   width: 350px;
   overflow: auto;
-  background: rgba(255, 255, 255, 0.8); }
+  background: #eee; }
 
 #features {
   font-size: 12px; }
   #features td {
     padding: 0.25em 0.75em; }
   #features table {
-    border-collapse: collapse; }
+    border-collapse: collapse;
+    width: 100%; }
   #features table td, #features table th {
-    border: 1px solid #eee; }
+    border: 1px solid #bbb; }
   #features table tr:first-child th {
     border-top: 0; }
   #features table tr:last-child td {
     border-bottom: 0; }
   #features table tr td:first-child,
   #features table tr th:first-child {
-    border-left: 0; }
+    border-left: 0;
+    width: 120px; }
   #features table tr td:last-child,
   #features table tr th:last-child {
     border-right: 0; }
+
+#features .enum-field,
+#features .numeric-field {
+  cursor: pointer;
+  color: #00a; }
+
+#features .enum-field:hover,
+#features .numeric-field:hover {
+  background: #bbb; }
+
+#features h4 {
+  font-family: sans-serif;
+  margin: 1em 0.5em 0.25em; }
 
 #legends {
   position: absolute;
@@ -479,7 +493,7 @@ html, body {
   right: 360px; }
 
 .legend {
-  background: rgba(255, 255, 255, 0.8);
+  background: #eee;
   border: 1px solid grey;
   padding: 4px;
   max-width: 200px; }
@@ -488,12 +502,13 @@ html, body {
   font-size: 14px; }
 
 .legend .box {
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   display: inline-block;
   margin-right: 5px;
   margin-top: 2px;
-  border: 1px solid #333; }
+  border: 1px solid #777;
+  border-radius: 6px; }
 
 .legend .circle {
   display: inline-block;

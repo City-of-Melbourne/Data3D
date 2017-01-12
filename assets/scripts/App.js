@@ -31013,7 +31013,7 @@ request.getJson = function (uri) {
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJiajVwaHJ2In0.RN7KywMOxLLNmcTFfn0cig';
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/light-v9',
+    style: 'mapbox://styles/mapbox/dark-v9',
     center: [144.9656, -37.813],
     zoom: 14
 });
@@ -31027,7 +31027,14 @@ DAM: http://localhost:3002/#gh7s-qda8
 */
 
 // known point datasets that work ok
-var choices = ['fp38-wiyy', 'ygaw-6rzq', '84bf-dihi', 'tdvh-n9dv', 'gh7s-qda8', 'sfrg-zygb', 'ew6k-chz4', '7vrd-4av5', // wayfinding
+var choices = ['fp38-wiyy', // trees
+'ygaw-6rzq', // pedestrian sensor locations
+'84bf-dihi', // Venues for events
+'tdvh-n9dv', // Live bike share
+'gh7s-qda8', // DAM
+'sfrg-zygb', // Cafes and Restaurants
+'ew6k-chz4', // Bio Blitz 2016
+'7vrd-4av5', // wayfinding
 'ss79-v558', // bus stops
 'mffi-m9yn', // pubs
 'svux-bada', // soil textures - nice one
@@ -31064,6 +31071,7 @@ var locationColumn;
 var locationIsPoint;
 var numericColumns = [];
 var textColumns = [];
+var boringColumns = [];
 var mins = {},
     maxs = {},
     frequencies = {};
@@ -31093,6 +31101,12 @@ function getLocationColumn(columns) {
     textColumns.forEach(function (col) {
         return frequencies[col] = {};
     });
+
+    boringColumns = columns.map(function (col) {
+        return col.name;
+    }).filter(function (col) {
+        return numericColumns.indexOf(col) < 0 && textColumns.indexOf(col) < 0;
+    });
 }
 
 function pickVisColumn(columnName) {
@@ -31105,11 +31119,11 @@ function pickVisColumn(columnName) {
         };
         console.log(radiusProps);
         map.setPaintProperty('points', 'circle-radius', radiusProps);
-
-        legendHtml = '<div class="close">Close ✖</div>' + ('<h3>' + columnName + '</h3>') + ('<span class="circle" style="height:6px; width: 6px; border-radius: 3px"></span><label>' + mins[columnName] + '</label><br/>') + ('<span class="circle" style="height:20px; width: 20px; border-radius: 10px"></span><label>' + maxs[columnName] + '</label>');
+        var closeBtn = false; // Can't safely close numeric columns yet. https://github.com/mapbox/mapbox-gl-js/issues/3949
+        legendHtml = (closeBtn ? '<div class="close">Close ✖</div>' : '') + ('<h3>' + columnName + '</h3>') + ('<span class="circle" style="height:6px; width: 6px; border-radius: 3px"></span><label>' + mins[columnName] + '</label><br/>') + ('<span class="circle" style="height:20px; width: 20px; border-radius: 10px"></span><label>' + maxs[columnName] + '</label>');
 
         document.querySelector('#legend-numeric').innerHTML = legendHtml;
-        document.querySelector('#legend-numeric .close').addEventListener('click', function (e) {
+        if (closeBtn) document.querySelector('#legend-numeric .close').addEventListener('click', function (e) {
             console.log(pointLayer().paint['circle-radius']);
             map.setPaintProperty('points', 'circle-radius', pointLayer().paint['circle-radius']);
             document.querySelector('#legend-numeric').innerHTML = '';
@@ -31154,12 +31168,22 @@ function locationToCoords(location) {
 }
 
 function computeSortedFrequencies() {
+    var newTextColumns = [];
     textColumns.forEach(function (col) {
         sortedFrequencies[col] = Object.keys(frequencies[col]).sort(function (vala, valb) {
-            return frequencies[col][vala] > frequencies[col][valb] ? 1 : -1;
+            return frequencies[col][vala] < frequencies[col][valb] ? 1 : -1;
         }).slice(0, 12);
-        // ...slice(0,10)
+
+        if (Object.keys(frequencies[col]).length < 2 || Object.keys(frequencies[col]).length > 20 && frequencies[col][sortedFrequencies[col][0]] <= 5) {
+            // It's boring if all values the same, or if too many different values (as judged by most common value being 5 times or fewer)
+            boringColumns.push(col);
+            console.log('Boring! ');
+            console.log(frequencies[col]);
+        } else {
+            newTextColumns.push(col); // how do you safely delete from array you're looping over?
+        }
     });
+    textColumns = newTextColumns;
     console.log(sortedFrequencies);
 }
 
@@ -31238,17 +31262,23 @@ function keyToId(key) {
     return key.replace(/[^A-Za-z0-9_-]/g, '_');
 }
 
+function showFeatureTable(feature) {
+    function rowsInArray(array, classStr) {
+        return '<table>' + Object.keys(feature).filter(function (key) {
+            return key !== locationColumn && (array === undefined || array.indexOf(key) >= 0);
+        }).map(function (key) {
+            return '<tr><td ' + classStr + '>' + key + '</td><td>' + feature[key] + '</td></tr>';
+        }).join('\n') + '</table>';
+    }
+    document.getElementById('features').innerHTML = '<h4>Click a field to visualise with colour</h4>' + rowsInArray(textColumns, 'class="enum-field"') + '<h4>Click a field to visualise with size</h4>' + rowsInArray(numericColumns, 'class="numeric-field"') + '<h4>Other fields</h4>' + rowsInArray(boringColumns, '');
+}
+
 function mousemove(e) {
     var feature = map.queryRenderedFeatures(e.point, { layers: ['points'] }).map(function (f) {
         return f.properties;
     })[0];
     if (feature) {
-        var tbody = Object.keys(feature).filter(function (key) {
-            return key !== locationColumn;
-        }).map(function (key) {
-            return '<tr><td>' + key + '</td><td>' + feature[key] + '</td></tr>';
-        }).join('\n');
-        document.getElementById('features').innerHTML = '<table>' + tbody + '</table>';
+        showFeatureTable(feature);
         //d3s.selectAll('#features td').on('click', function(e) { console.log(this);   });
         // TODO smarter selection of features here - should we be able to click anywhere on row?
         document.querySelectorAll('#features td').forEach(function (td) {
