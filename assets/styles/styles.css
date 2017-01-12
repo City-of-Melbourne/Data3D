@@ -441,8 +441,12 @@ html, body {
   background: #eee; }
 
 #caption h1 {
-  font-size: 1.5rem;
-  line-height: 1.5rem; }
+  font-size: 1rem;
+  line-height: 1.5rem;
+  text-align: center; }
+
+#source {
+  font-size: 0.75em; }
 
 #features {
   position: absolute;
@@ -456,12 +460,13 @@ html, body {
 #features {
   font-size: 12px; }
   #features td {
-    padding: 0.25em 0.75em; }
+    padding: 0.25em 0.75em;
+    line-height: 1rem; }
   #features table {
     border-collapse: collapse;
     width: 100%; }
   #features table td, #features table th {
-    border: 1px solid #bbb; }
+    border: 1px solid #ddd; }
   #features table tr:first-child th {
     border-top: 0; }
   #features table tr:last-child td {

@@ -31038,6 +31038,7 @@ var choices = ['fp38-wiyy', // trees
 'ss79-v558', // bus stops
 'mffi-m9yn', // pubs
 'svux-bada', // soil textures - nice one
+'qjwc-f5sh', // community food guide - good
 'fthy-zajy', // properties over $2.5m
 'tx8h-2jgi', // accessible toilets
 '6u5z-ubvh'];
@@ -31085,7 +31086,7 @@ function getLocationColumn(columns) {
     locationColumn = lc.name;
 
     numericColumns = columns.filter(function (col) {
-        return col.dataTypeName === 'number';
+        return col.dataTypeName === 'number' && col.name !== 'Latitude' && col.name !== 'Longitude';
     }).map(function (col) {
         return col.name;
     });
@@ -31174,8 +31175,8 @@ function computeSortedFrequencies() {
             return frequencies[col][vala] < frequencies[col][valb] ? 1 : -1;
         }).slice(0, 12);
 
-        if (Object.keys(frequencies[col]).length < 2 || Object.keys(frequencies[col]).length > 20 && frequencies[col][sortedFrequencies[col][0]] <= 5) {
-            // It's boring if all values the same, or if too many different values (as judged by most common value being 5 times or fewer)
+        if (Object.keys(frequencies[col]).length < 2 || Object.keys(frequencies[col]).length > 20 && frequencies[col][sortedFrequencies[col][1]] <= 5) {
+            // It's boring if all values the same, or if too many different values (as judged by second-most common value being 5 times or fewer)
             boringColumns.push(col);
             console.log('Boring! ');
             console.log(frequencies[col]);
@@ -31211,16 +31212,21 @@ function rowsToPoints(rows) {
     };
 
     rows.forEach(function (row) {
-        if (row[locationColumn]) {
-            var feature = {
-                type: 'Feature',
-                properties: row,
-                geometry: {
-                    type: 'Point',
-                    coordinates: locationToCoords(row[locationColumn])
-                }
-            };
-            points.features.push(feature);
+        try {
+            if (row[locationColumn]) {
+                var feature = {
+                    type: 'Feature',
+                    properties: row,
+                    geometry: {
+                        type: 'Point',
+                        coordinates: locationToCoords(row[locationColumn])
+                    }
+                };
+                points.features.push(feature);
+            }
+        } catch (e) {
+            console.log('Bad location: ' + row[locationColumn]);
+            // Just don't push it 
         }
     });
     return points;
