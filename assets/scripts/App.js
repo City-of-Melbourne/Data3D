@@ -31234,8 +31234,9 @@ function rowsToPoints(rows) {
 
 var title;
 request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId + '.json').then(function (props) {
-    document.querySelectorAll('#caption h1')[0].innerHTML = props.name;
-    document.querySelectorAll('#source')[0].setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
+    document.querySelector('#caption h1').innerHTML = props.name;
+    document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
+    document.querySelector('#share').innerHTML = 'Share this: <a href="https://city-of-melbourne.github.io/anything-map/#' + dataId + '">https://city-of-melbourne.github.io/anything-map/#' + dataId + '</a>';
 
     if (props.newBackend && props.childViews.length > 0) {
 
