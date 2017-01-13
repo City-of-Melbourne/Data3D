@@ -31056,8 +31056,11 @@ function pointLayer(filter, highlight) {
         type: 'circle',
         source: 'dataset',
         paint: {
-            'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
+            //            'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
+            'circle-color': highlight ? 'rgba(0,0,0,0)' : 'hsl(220,80%,50%)',
             'circle-opacity': 0.95,
+            'circle-stroke-color': highlight ? 'white' : 'rgba(50,50,50,0.5)',
+            'circle-stroke-width': 1,
             'circle-radius': {
                 stops: highlight ? [[10, 4], [17, 10]] : [[10, 2], [17, 5]]
             }
@@ -31280,12 +31283,12 @@ function showFeatureTable(feature) {
     document.getElementById('features').innerHTML = '<h4>Click a field to visualise with colour</h4>' + rowsInArray(textColumns, 'class="enum-field"') + '<h4>Click a field to visualise with size</h4>' + rowsInArray(numericColumns, 'class="numeric-field"') + '<h4>Other fields</h4>' + rowsInArray(boringColumns, '');
 }
 
+var lastFeature;
 function mousemove(e) {
-    var feature = map.queryRenderedFeatures(e.point, { layers: ['points'] }).map(function (f) {
-        return f.properties;
-    })[0];
-    if (feature) {
-        showFeatureTable(feature);
+    var feature = map.queryRenderedFeatures(e.point, { layers: ['points'] })[0];
+    if (feature && feature !== lastFeature) {
+        lastFeature = feature;
+        showFeatureTable(feature.properties);
         //d3s.selectAll('#features td').on('click', function(e) { console.log(this);   });
         // TODO smarter selection of features here - should we be able to click anywhere on row?
         document.querySelectorAll('#features td').forEach(function (td) {
@@ -31293,7 +31296,7 @@ function mousemove(e) {
                 return pickVisColumn(e.srcElement.innerText);
             });
         });
-        map.setFilter('points-highlight', ['==', locationColumn, feature[locationColumn]]); // we don't have any other reliable key?
+        map.setFilter('points-highlight', ['==', locationColumn, feature.properties[locationColumn]]); // we don't have any other reliable key?
     }
 }
 
