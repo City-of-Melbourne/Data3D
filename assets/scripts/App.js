@@ -31081,7 +31081,7 @@ var mins = {},
     frequencies = {};
 var sortedFrequencies = {};
 
-function getLocationColumn(columns) {
+function chooseColumnTypes(columns) {
     var lc = columns.filter(function (col) {
         return col.dataTypeName === 'location' || col.dataTypeName === 'point';
     })[0];
@@ -31193,6 +31193,7 @@ function computeSortedFrequencies() {
 
 // convert numeric columns to numbers for data vis
 function convertRow(row) {
+    // TODO use column.cachedContents.smallest and .largest
     numericColumns.forEach(function (col) {
         row[col] = Number(row[col]); // +row[col] apparently faster, but breaks on simple things like blank values
         if (row[col] < mins[col]) mins[col] = row[col];
@@ -31246,10 +31247,10 @@ request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId + '.json
         dataId = props.childViews[0];
 
         return request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId).then(function (props) {
-            return getLocationColumn(props.columns);
+            return chooseColumnTypes(props.columns);
         });
     }
-    getLocationColumn(props.columns);
+    chooseColumnTypes(props.columns);
 }).then(function () {
     return d3.csv('https://data.melbourne.vic.gov.au/api/views/' + dataId + '/rows.csv?accessType=DOWNLOAD', convertRow, function (rows) {
         console.log(maxs);
@@ -31287,6 +31288,8 @@ var lastFeature;
 function mousemove(e) {
     var feature = map.queryRenderedFeatures(e.point, { layers: ['points'] })[0];
     if (feature && feature !== lastFeature) {
+        map.getCanvas().style.cursor = 'pointer';
+
         lastFeature = feature;
         showFeatureTable(feature.properties);
         //d3s.selectAll('#features td').on('click', function(e) { console.log(this);   });
@@ -31297,6 +31300,8 @@ function mousemove(e) {
             });
         });
         map.setFilter('points-highlight', ['==', locationColumn, feature.properties[locationColumn]]); // we don't have any other reliable key?
+    } else {
+        map.getCanvas().style.cursor = '';
     }
 }
 
