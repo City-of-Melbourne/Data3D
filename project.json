@@ -37,7 +37,7 @@
         }
     },
     "delete:clean": {
-        "files": "@this.dest"
+        "files": ["./build/assets/*", "./build/*.html"]
     },
     "dest": "./build",
     "images": {
@@ -55,7 +55,7 @@
         "dest": "@this.dest/assets/scripts",
         "files": ["*.js"],
         "watch": ["**/*.js"],
-        "eslint": {},
+        "_eslint": {},
         "babelify": {
             "presets": ["babel-preset-es2015"]
         },
