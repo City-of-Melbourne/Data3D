@@ -1,0 +1,163 @@
+html , body
+ { 
+    // height: 100%; 
+    margin: 0; 
+}
+
+$scheme: 'dark';
+$darkbg: #eee;
+$featurewidth: 350px;
+body {
+    //display: flex;
+    //justify-content: center;
+    
+}
+#map {
+    position:absolute;
+    width:calc(100% - 350px);
+    height:100%;
+}
+
+
+#caption {
+    position:absolute;
+    top: 1em;
+    width:600px;
+    left:calc(50% - 300px - 175px); // 175px is half width of feature bar
+    padding:1em;
+    //border: 1px solid lightgray;
+    
+    @if $scheme == 'light' {
+        background:hsla(0,0,100%,0.8);
+        box-shadow: 0px 0px 4px 4px white;
+    } @else {
+        background: $darkbg;
+    }
+}
+
+#caption h1 {
+    font-size:1rem;
+    line-height:1.5rem;
+    text-align:center;
+}
+
+#source {
+    font-size:0.75em;
+}
+
+#features {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 350px;
+    overflow: auto;
+    @if $scheme == 'light' {
+        background: rgba(255, 255, 255, 0.8);
+    } @else {
+        background: $darkbg;
+    }
+}    
+
+#features {
+    font-size:12px;
+    td {
+        padding: 0.25em 0.75em;
+        line-height:1rem;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    table td, table th {
+      @if $scheme == 'light' {
+        border: 1px solid #eee;
+      } @else {
+        border: 1px solid #ddd;
+      }
+    }
+    table tr:first-child th {
+      border-top: 0;
+    }
+    table tr:last-child td {
+      border-bottom: 0;
+
+    }
+    table tr td:first-child,
+    table tr th:first-child {
+      border-left: 0;
+      width:120px;
+    }
+    table tr td:last-child,
+    table tr th:last-child {
+      border-right: 0;
+    }
+}
+
+#features .enum-field, 
+#features .numeric-field {
+    cursor: pointer;
+    color: #00a;
+}
+
+#features .enum-field:hover, 
+#features .numeric-field:hover {
+    background:#bbb;
+}
+
+#features h4 {
+    font-family:sans-serif;
+    margin: 1em 0.5em 0.25em;
+}
+
+#legends {
+    position: absolute;
+    top: 10px;
+    right: 360px;
+}
+.legend {
+    @if scheme == 'light' {
+        background: rgba(255,255,255,0.8);
+    } @else {
+        background: #eee;
+    }
+    border: 1px solid grey;
+    padding:4px;
+    max-width:200px;
+}
+
+.legend h3 {
+    font-size: 14px;
+}
+
+.legend .box {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    margin-right:5px;
+    margin-top:2px;
+    border: 1px solid #777;
+    border-radius: 6px;
+
+}   
+
+.legend .circle {
+    display: inline-block;
+    background: lightblue;
+    border: 1px solid #333;
+    margin-right:10px;
+}
+
+.legend label {
+    vertical-align: top; // really want middle somewhere but this looks ok
+    color:#444;
+    font-size:12px;
+}
+
+.legend .close {
+    background:#eee;
+    cursor: pointer;
+    text-align: right;
+    font-size:12px;
+    margin-bottom:1em;
+}

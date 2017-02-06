@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Melbourne Cafes</title>
+        <meta name="description" content="">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+        <!-- <link href='https://api.mapbox.com/mapbox-gl-js/v0.30.0/mapbox-gl.css' rel='stylesheet' /> -->
+        <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.css' rel='stylesheet' />
+        <script src='https://api.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.js'></script>
+        
+    <body>
+
+        <div id="map">
+            
+        </div>
+        <div id="caption">
+        <h1>Cafes in Melbourne</h1>
+        <a href="https://data.melbourne.vic.gov.au/Economy/Cafes-and-Restaurants-only/sfrg-zygb/data">Source: City of Melbourne Open Data</a><br>
+        <small id="loading">Loading cafes...</small>
+        </div>
+
+        <link rel="stylesheet" href="assets/styles/styles.css?v=@version">
+
+        <!-- https://varvy.com/pagespeed/defer-loading-javascript.html -->
+        <script type="text/javascript">
+            window.addEventListener("load", function() {
+                var element = document.createElement("script");
+                element.src = "@scriptsPath/App.js?v=@version";
+                document.body.appendChild(element);
+            }, false);
+        </script>
+    </body>
+</html>

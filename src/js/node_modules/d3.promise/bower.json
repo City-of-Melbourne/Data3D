@@ -1,0 +1,29 @@
+{
+  "name": "d3.promise",
+  "homepage": "https://github.com/kristw/d3.promise",
+  "authors": [
+    "@kristw"
+  ],
+  "description": "d3.csv & friends that return promises instead of accepting callbacks",
+  "main": "dist/d3.promise.min.js",
+  "moduleType": [
+    "amd",
+    "es6",
+    "globals"
+  ],
+  "keywords": [
+    "d3.promise",
+    "d3"
+  ],
+  "license": "Apache v2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~4.2.7"
+  }
+}
