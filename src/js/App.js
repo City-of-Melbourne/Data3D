@@ -159,19 +159,31 @@ function addPointsToMap(rows, map) {
     map.addLayer(pointLayer(['==',sourceData.locationColumn, '-'], true)); // highlight layer
 }
 
-function polygonLayer(sourcename, highlight /* not used */) {
+function polygonLayer(highlight) {
     let ret = {
-        id: 'polygons' + (highlight ? '-highlight': ''),
+        id: 'polygons',
         type: 'fill-extrusion',
         source: 'dataset',
         'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
         paint: { 
-             'fill-extrusion-opacity': 0.9,
+             'fill-extrusion-opacity': 0.8,
              'fill-extrusion-height': 0,
              'fill-extrusion-color': '#003'
          },
     };
     return ret;
+}
+function polygonHighlightLayer() {
+    return{
+        id: 'polygons-highlight',
+        type: 'fill',
+        source: 'dataset',
+        'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
+        paint: { 
+             'fill-color': 'white'
+        },
+        filter: ['==', 'block_id', '-']
+    };
 }
 
 function addPolygonsToMap(rows, map) {
@@ -183,8 +195,8 @@ function addPolygonsToMap(rows, map) {
         type: 'vector', 
         url: 'mapbox://opencouncildata.aedfmyp8'
     });
+    map.addLayer(polygonHighlightLayer());
     map.addLayer(polygonLayer());
-    //map.addLayer(polygonLayer('dataset', ['==', locationColumn, '-'], true)); // highlight layer
     
 }
 //false && whenMapLoaded(() =>
@@ -245,6 +257,7 @@ function mousemove(e) {
             map.setFilter('points-highlight', ['==', sourceData.locationColumn, feature.properties[sourceData.locationColumn]]); // we don't have any other reliable key?
         } else {
             // ### TODO add polygon highlights 
+            map.setFilter('polygons-highlight', ['==', 'block_id', feature.properties.block_id]); // don't have a general way to match other kinds of polygons
             console.log(feature.properties);
         }
     } else {

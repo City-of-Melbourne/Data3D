@@ -1,6 +1,10 @@
 /* jshint esnext:true */
 import { melbourneRoute } from './melbourneRoute';
 
+/*
+Continuously moves the Mapbox vantage point around a GeoJSON-defined path.
+*/
+
 function whenLoaded(map, f) {
     if (map.loaded()) {
         console.log('Already loaded.');
