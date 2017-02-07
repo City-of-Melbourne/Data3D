@@ -1,8 +1,5 @@
 /* jshint esnext:true */
 var d3 = require('d3.promise');
-//var d3s = require('d3-selection'); 
-var request = require('request-promise');
-request.getJson = (uri) => request.get({ uri: uri, json: true });
 
 function def(a, b) {
     return a !== undefined ? a : b;
@@ -132,17 +129,17 @@ export class SourceData {
 
     // return promise for rows
     load() {
-        return request.getJson('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '.json')
+        return d3.json('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '.json')
         .then(props => {
             this.name = props.name;
             if (props.newBackend && props.childViews.length > 0) {
 
                 this.dataId = props.childViews[0];
 
-                return request.getJson('https://data.melbourne.vic.gov.au/api/views/' + dataId)
+                return d3.json('https://data.melbourne.vic.gov.au/api/views/' + dataId)
                     .then(props => this.chooseColumnTypes(props.columns));
             } else {
-                this.chooseColumnTypes(props.columns)
+                this.chooseColumnTypes(props.columns);
                 return Promise.resolve(true);
             }
         }).then(() => {
@@ -154,7 +151,7 @@ export class SourceData {
                     this.computeBlockIndex();
                 return rows;
             });
-        })
+        });
     }
 
 
@@ -172,6 +169,6 @@ export class SourceData {
     }
 
     filteredRows() {
-        return this.rows.filter(row => row['Census year'] === this.activeCensusYear && row['CLUE small area'] !== 'City of Melbourne total')
+        return this.rows.filter(row => row['Census year'] === this.activeCensusYear && row['CLUE small area'] !== 'City of Melbourne total');
     }
 }

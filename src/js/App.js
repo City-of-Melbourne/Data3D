@@ -6,8 +6,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJia
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/dark-v9',
-    center: [144.9656, -37.813],
-    zoom: 14,
+    center: [144.95, -37.813],
+    zoom: 13,
     pitch: 45 // TODO revert for flat
 });
 
@@ -90,7 +90,7 @@ function setVisColumn(columnName) {
             };
             console.log(radiusProps);
             map.setPaintProperty('points', 'circle-radius', radiusProps);
-            legend.showNumericLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); // Can't safely close numeric columns yet. https://github.com/mapbox/mapbox-gl-js/issues/3949
+            legend.showRadiusLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); // Can't safely close numeric columns yet. https://github.com/mapbox/mapbox-gl-js/issues/3949
         } else { // polygon
             // TODO this filtering should be done in sourceData
             let heightStops = sourceData.filteredRows()                
@@ -115,6 +115,7 @@ function setVisColumn(columnName) {
                     .filter(row => row[dataColumn] === 0)
                     .map(row => row[sourceData.locationColumn]))]);
 
+            legend.showExtrusionHeightLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); 
         }
     } else if (textColumns.indexOf(dataColumn) >= 0) {
         var colorProps = {
@@ -211,7 +212,8 @@ function whenLoaded(f) {
     else
         map.once('load', f);
 }
-
+let def = (a, b) => a !== undefined ? a : b;
+    
 function showFeatureTable(feature) {
     function rowsInArray(array, classStr) {
         return '<table>' + 
@@ -224,11 +226,17 @@ function showFeatureTable(feature) {
             '</table>';
         }
 
-    // if this is a block lookup, we have to join back against the original source data.
-    if (sourceData.shape === 'polygon') { // TODO check that this is a block lookup choropleth
-        feature = sourceData.getRowForBlock(feature.block_id, feature.census_yr);
-                                            
+    if (feature === undefined) {
+        // Called before the user has selected anything
+        feature = {};
+        sourceData.textColumns.forEach(c => feature[c] = '');
+        sourceData.numericColumns.forEach(c => feature[c] = '');
+        sourceData.boringColumns.forEach(c => feature[c] = '');
+
+    } else if (sourceData.shape === 'polygon') { // TODO check that this is a block lookup choropleth
+        feature = sourceData.getRowForBlock(feature.block_id, feature.census_yr);        
     }
+
 
 
     document.getElementById('features').innerHTML = 
@@ -238,6 +246,14 @@ function showFeatureTable(feature) {
         rowsInArray(sourceData.numericColumns, 'class="numeric-field"') + 
         '<h4>Other fields</h4>' +
         rowsInArray(sourceData.boringColumns, '');
+
+
+    document.querySelectorAll('#features td').forEach(td => 
+        td.addEventListener('click', e => {
+            console.log(e);
+            setVisColumn(e.target.innerText) ;
+        }));
+
 }
 
 var lastFeature;
@@ -249,12 +265,6 @@ function mousemove(e) {
         lastFeature = feature;
         showFeatureTable(feature.properties);
         //d3s.selectAll('#features td').on('click', function(e) { console.log(this);   });
-        // TODO smarter selection of features here - should we be able to click anywhere on row?
-        document.querySelectorAll('#features td').forEach(td => 
-            td.addEventListener('click', e => {
-                console.log(e);
-                setVisColumn(e.target.innerText) ;
-            }));
         
         if (sourceData.shape === 'point') {
             map.setFilter('points-highlight', ['==', locationColumn, feature.properties[locationColumn]]); // we don't have any other reliable key?
@@ -276,7 +286,9 @@ function keyToId(key) {
 
 // known point datasets that work ok
 var choices = [
-'b36j-kiy4', // employment
+    'b36j-kiy4', // employment
+    '234q-gg83', // floor space by use by block
+    'c3gt-hrz6' // business establishments
 ];
 let dataId;
 if (window.location.hash) {
@@ -292,12 +304,13 @@ var sourceData = new SourceData(dataId);
     .then((rows) => {
         document.querySelector('#caption h1').innerHTML = sourceData.name;
         document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
-        // TODO restore document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/anything-map/#${dataId}">https://city-of-melbourne.github.io/anything-map/#${dataId}</a>`;    
+        document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
         //
         if (sourceData.shape === 'point') {
             rowsToPointsLayer(rows);
         } else {
             rowsToPolygonsLayer(rows);
         }
+        showFeatureTable();
     });
 
