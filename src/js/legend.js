@@ -18,8 +18,8 @@ export function showExtrusionHeightLegend(id, columnName, minVal, maxVal, closeH
         (closeHandler ? '<div class="close">Close ✖</div>' : '') + 
         `<h3>${columnName}</h3>` + 
 
-        `<span class="circle" style="height:3px; width: 12px; background: rgb(20,20,40)"></span><label>${minVal}</label><br/>` +
-        `<span class="circle" style="height:20px; width: 12px; background: rgb(40,40,250)"></span><label>${maxVal}</label>`;
+        `<span class="circle" style="height:20px; width: 12px; background: rgb(40,40,250)"></span><label>${maxVal}</label><br/>` +
+        `<span class="circle" style="height:3px; width: 12px; background: rgb(20,20,40)"></span><label>${minVal}</label>`; 
 
     document.querySelector(id).innerHTML = legendHtml;
     if (closeHandler) {

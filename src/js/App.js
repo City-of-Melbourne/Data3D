@@ -13,7 +13,7 @@ Bike share stations: http://localhost:3002/#tdvh-n9dv
 DAM: http://localhost:3002/#gh7s-qda8
 */
 
-function whenLoaded(f) {
+function whenMapLoaded(map, f) {
     if (map.loaded())
         f();
     else
@@ -153,7 +153,7 @@ function pointLayer(filter, highlight) {
 
 
 // Convert a table of rows to a Mapbox datasource
-function addPointsToMap(rows) {
+function addPointsToMap(rows, map) {
     map.addSource('dataset', rowsToPointDatasource(rows) );
     map.addLayer(pointLayer());
     map.addLayer(pointLayer(['==',sourceData.locationColumn, '-'], true)); // highlight layer
@@ -174,7 +174,7 @@ function polygonLayer(sourcename, highlight /* not used */) {
     return ret;
 }
 
-function addPolygonsToMap(rows) {
+function addPolygonsToMap(rows, map) {
     // we don't need to construct a "polygon datasource", the geometry exists in Mapbox already
     // https://data.melbourne.vic.gov.au/Economy/Employment-by-block-by-industry/b36j-kiy4
     
@@ -187,7 +187,7 @@ function addPolygonsToMap(rows) {
     //map.addLayer(polygonLayer('dataset', ['==', locationColumn, '-'], true)); // highlight layer
     
 }
-//false && whenLoaded(() =>
+//false && whenMapLoaded(() =>
 //  setVisColumn(sourceData.numericColumns[Math.floor(Math.random() * sourceData.numericColumns.length)]));
 
     
@@ -228,9 +228,8 @@ function showFeatureTable(feature) {
     document.querySelectorAll('#features td').forEach(td => 
         td.addEventListener('click', e => {
             console.log(e);
-            setVisColumn(e.target.innerText) ;
+            setVisColumn(e.target.innerText) ; // TODO highlight the selected row
         }));
-
 }
 
 var lastFeature;
@@ -241,7 +240,6 @@ function mousemove(e) {
 
         lastFeature = feature;
         showFeatureTable(feature.properties);
-        //d3s.selectAll('#features td').on('click', function(e) { console.log(this);   });
         
         if (sourceData.shape === 'point') {
             map.setFilter('points-highlight', ['==', sourceData.locationColumn, feature.properties[sourceData.locationColumn]]); // we don't have any other reliable key?
@@ -263,7 +261,6 @@ function chooseDataset() {
     if (window.location.hash) {
         return window.location.hash.replace('#','');
     }
-
 
     // known point datasets that work ok
     var clueChoices = [
@@ -307,35 +304,38 @@ function showCaption(name, dataId) {
     document.querySelector('#caption').style.display = 'none';
  }
 
-let dataId = chooseDataset();
+let map, sourceData;
 
-var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/dark-v9',
-    center: [144.95, -37.813],
-    zoom: 13,
-    pitch: 45 // TODO revert for flat
-});
+(function start() {
 
-let sourceData = new SourceData(dataId);
-
-    sourceData
-    .load()
-    .then(rows => {
-        showCaption(sourceData.name, dataId);
-
-        whenLoaded(() => {
-            if (sourceData.shape === 'point') {
-                addPointsToMap(rows);
-            } else {
-                addPolygonsToMap(rows);
-            }
-            showFeatureTable(); 
-            document.querySelectorAll('#loading')[0].outerHTML='';
-
-            map.on('mousemove', mousemove);
-        });
-        //var fp = new FlightPath(map);
-
+    map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v9',
+        center: [144.95, -37.813],
+        zoom: 13,
+        pitch: 45 // TODO revert for flat
     });
 
+    let dataId = chooseDataset();
+    sourceData = new SourceData(dataId);
+
+        sourceData
+        .load()
+        .then(rows => {
+            showCaption(sourceData.name, dataId);
+
+            whenMapLoaded(map, () => {
+                if (sourceData.shape === 'point') {
+                    addPointsToMap(rows, map);
+                } else {
+                    addPolygonsToMap(rows, map);
+                }
+                showFeatureTable(); 
+                document.querySelectorAll('#loading')[0].outerHTML='';
+
+                map.on('mousemove', mousemove);
+            });
+            //var fp = new FlightPath(map);
+
+        });
+})();
