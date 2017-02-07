@@ -74,12 +74,16 @@ export class SourceData {
 
         // convert location types (string) to [lon, lat] array.
         function locationToCoords(location) {
+            if (String(location).length === 0)
+                return null;
             // "new backend" datasets use a WKT field [POINT (lon lat)] instead of (lat, lon)
             if (this.locationIsPoint) {
                 return location.replace('POINT (', '').replace(')', '').split(' ').map(n => Number(n));
             } else if (this.shape === 'point') {
+                console.log(location.length);
                 return [Number(location.split(', ')[1].replace(')', '')), Number(location.split(', ')[0].replace('(', ''))];
-            } else return location;
+            } else 
+            return location;
 
         }
 
@@ -114,7 +118,7 @@ export class SourceData {
 
             if (Object.keys(this.frequencies[col]).length < 2 || Object.keys(this.frequencies[col]).length > 20 && this.frequencies[col][this.sortedFrequencies[col][1]] <= 5) {
                 // It's boring if all values the same, or if too many different values (as judged by second-most common value being 5 times or fewer)
-                boringColumns.push(col);
+                this.boringColumns.push(col);
                 console.log('Boring! '); 
                 console.log(this.frequencies[col]);
             } else {

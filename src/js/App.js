@@ -2,14 +2,8 @@
 //var mapboxgl = require('mapbox-gl');
 import * as legend from './legend';
 import { SourceData } from './sourceData';
+import { FlightPath } from './flightPath';
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJiajVwaHJ2In0.RN7KywMOxLLNmcTFfn0cig';
-var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/dark-v9',
-    center: [144.95, -37.813],
-    zoom: 13,
-    pitch: 45 // TODO revert for flat
-});
 
 /*
 Pedestrian sensor locations: ygaw-6rzq
@@ -19,6 +13,122 @@ Bike share stations: http://localhost:3002/#tdvh-n9dv
 DAM: http://localhost:3002/#gh7s-qda8
 */
 
+function whenLoaded(f) {
+    if (map.loaded())
+        f();
+    else
+        map.once('load', f);
+}
+let def = (a, b) => a !== undefined ? a : b;
+
+function setCircleRadiusStyle(dataColumn) {
+   map.setPaintProperty('points', 'circle-radius', {
+        property: dataColumn,
+        stops: [
+            [{ zoom: 10, value: sourceData.mins[dataColumn]}, 1],
+            [{ zoom: 10, value: sourceData.maxs[dataColumn]}, 3],
+            [{ zoom: 17, value: sourceData.mins[dataColumn]}, 3],
+            [{ zoom: 17, value: sourceData.maxs[dataColumn]}, 10]
+        ]
+    });
+
+    legend.showRadiusLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); // Can't safely close numeric columns yet. https://github.com/mapbox/mapbox-gl-js/issues/3949
+}
+
+function removeCircleRadius(e) {
+    console.log(pointLayer().paint['circle-radius']);
+    map.setPaintProperty('points','circle-radius', pointLayer().paint['circle-radius']);
+    document.querySelector('#legend-numeric').innerHTML = '';
+}
+
+function setCircleColorStyle(dataColumn) {
+    let enumStops = sourceData.sortedFrequencies[dataColumn].map((val,i) => [val, enumColors[i]]);
+    map.setPaintProperty('points', 'circle-color', {
+        property: dataColumn,
+        type: 'categorical',
+        stops: enumStops
+    });
+    legend.showCategoryLegend('#legend-enum', dataColumn, enumStops, removeCircleColor);
+}
+
+function removeCircleColor(e) {
+    map.setPaintProperty('points','circle-color', pointLayer().paint['circle-color']);
+    document.querySelector('#legend-enum').innerHTML = '';
+}
+
+function setPolygonHeightStyle(dataColumn) {
+    map.setPaintProperty('polygons', 'fill-extrusion-height',  {
+        // remember, the data doesn't exist in the polygon set, it's just a huge value lookup
+        property: 'block_id',//locationColumn, // the ID on the actual geometry dataset
+        type: 'categorical',
+        stops: sourceData.filteredRows()                
+            .map(row => [row[sourceData.locationColumn], row[dataColumn] / sourceData.maxs[dataColumn] * 1000])
+    });
+    map.setPaintProperty('polygons', 'fill-extrusion-color', {
+        property: 'block_id',
+        type: 'categorical',
+        stops: sourceData.filteredRows()
+            .map(row => [row[sourceData.locationColumn], 'rgb(0,0,' + Math.round(40 + row[dataColumn] / sourceData.maxs[dataColumn] * 200) + ')'])
+    });
+    map.setFilter('polygons', ['!in', 'block_id', ...(/* ### TODO generalise */ 
+        sourceData.filteredRows()
+        .filter(row => row[dataColumn] === 0)
+        .map(row => row[sourceData.locationColumn]))]);
+
+    legend.showExtrusionHeightLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); 
+}
+
+let dataColumn;
+
+// switch visualisation to using this column
+function setVisColumn(columnName) {
+    dataColumn = columnName;
+    console.log('Data column: ' + dataColumn);
+
+    if (sourceData.numericColumns.indexOf(dataColumn) >= 0) {
+        if (sourceData.shape === 'point') {
+            setCircleRadiusStyle(dataColumn);
+        } else { // polygon
+            setPolygonHeightStyle(dataColumn);
+            // TODO add close button behaviour. maybe?
+        }
+    } else if (sourceData.textColumns.indexOf(dataColumn) >= 0) {
+        // TODO handle enum fields on polygons (no example currently)
+        setCircleColorStyle(dataColumn);
+            
+    }
+}
+// from ColorBrewer
+const enumColors = ['#1f78b4','#fb9a99','#b2df8a','#33a02c','#e31a1c','#fdbf6f','#a6cee3', '#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'];
+
+// convert a table of rows to GeoJSON
+function rowsToPointDatasource(rows) {
+    let datasource = {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    };
+
+    rows.forEach(row => {
+        try {
+            if (row[sourceData.locationColumn]) {
+                datasource.data.features.push({
+                    type: 'Feature',
+                    properties: row,
+                    geometry: {
+                        type: 'Point',
+                        coordinates: row[sourceData.locationColumn]
+                    }
+                });                    
+            }
+        } catch (e) { // Just don't push it 
+            console.log(`Bad location: ${row[sourceData.locationColumn]}`);            
+        }
+    });
+    return datasource;
+}
 
 function pointLayer(filter, highlight) {
     let ret = {
@@ -38,8 +148,15 @@ function pointLayer(filter, highlight) {
     };
     if (filter)
         ret.filter = filter;
-    //console.log(ret);
     return ret;
+}
+
+
+// Convert a table of rows to a Mapbox datasource
+function addPointsToMap(rows) {
+    map.addSource('dataset', rowsToPointDatasource(rows) );
+    map.addLayer(pointLayer());
+    map.addLayer(pointLayer(['==',sourceData.locationColumn, '-'], true)); // highlight layer
 }
 
 function polygonLayer(sourcename, highlight /* not used */) {
@@ -57,162 +174,22 @@ function polygonLayer(sourcename, highlight /* not used */) {
     return ret;
 }
 
-
-
-function removeCircleRadius(e) {
-    console.log(pointLayer().paint['circle-radius']);
-    map.setPaintProperty('points','circle-radius', pointLayer().paint['circle-radius']);
-    document.querySelector('#legend-numeric').innerHTML = '';
-}
-
-function removeCircleColor(e) {
-    map.setPaintProperty('points','circle-color', pointLayer().paint['circle-color']);
-    document.querySelector('#legend-enum').innerHTML = '';
-}
-
-let dataColumn;
-
-// switch visualisation to using this column
-function setVisColumn(columnName) {
-    dataColumn = columnName;
-    console.log('Data column: ' + dataColumn);
-
-    if (sourceData.numericColumns.indexOf(dataColumn) >= 0) {
-        if (sourceData.shape === 'point') {
-            let radiusProps = {
-                property: dataColumn,
-                stops: [
-                    [{ zoom: 10, value: sourceData.mins[dataColumn]}, 1],
-                    [{ zoom: 10, value: sourceData.maxs[dataColumn]}, 3],
-                    [{ zoom: 17, value: sourceData.mins[dataColumn]}, 3],
-                    [{ zoom: 17, value: sourceData.maxs[dataColumn]}, 10]
-                ]
-            };
-            console.log(radiusProps);
-            map.setPaintProperty('points', 'circle-radius', radiusProps);
-            legend.showRadiusLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); // Can't safely close numeric columns yet. https://github.com/mapbox/mapbox-gl-js/issues/3949
-        } else { // polygon
-            // TODO this filtering should be done in sourceData
-            let heightStops = sourceData.filteredRows()                
-                .map(row => [row[sourceData.locationColumn], row[dataColumn] / sourceData.maxs[dataColumn] * 1000]);
-            
-            let colorStops = sourceData.filteredRows()
-                .map(row => [row[sourceData.locationColumn], 'rgb(0,0,' + Math.round(40 + row[dataColumn] / sourceData.maxs[dataColumn] * 200) + ')']);
-
-            map.setPaintProperty('polygons', 'fill-extrusion-height',  {
-                // remember, the data doesn't exist in the polygon set, it's just a huge value lookup
-                property: 'block_id',//locationColumn, // the ID on the actual geometry dataset
-                type: 'categorical',
-                stops: heightStops
-            });
-            map.setPaintProperty('polygons', 'fill-extrusion-color', {
-                property: 'block_id',
-                type: 'categorical',
-                stops: colorStops
-            });
-            map.setFilter('polygons', ['!in', 'block_id', /* ### TODO generalise */ 
-                ...(sourceData.filteredRows()
-                    .filter(row => row[dataColumn] === 0)
-                    .map(row => row[sourceData.locationColumn]))]);
-
-            legend.showExtrusionHeightLegend('#legend-numeric', dataColumn, sourceData.mins[dataColumn], sourceData.maxs[dataColumn]/*, removeCircleRadius*/); 
-        }
-    } else if (textColumns.indexOf(dataColumn) >= 0) {
-        var colorProps = {
-            property: dataColumn,
-            type: 'categorical',
-            stops: sortedFrequencies[dataColumn].map((val,i) => [val, enumColors[i]])
-        };
-        console.log(JSON.stringify(colorProps));
-        map.setPaintProperty('points', 'circle-color', colorProps);
-        legend.showCategoryLegend('#legend-enum', dataColumn, colorProps.stops, removeCircleColor);
-    }
-}
-// from ColorBrewer
-const enumColors = ['#1f78b4','#fb9a99','#b2df8a','#33a02c','#e31a1c','#fdbf6f','#a6cee3', '#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'];
-
-// convert a table of rows to GeoJSON
-function rowsToPoints(rows) {
-    let points = {
-        type: 'FeatureCollection',
-        features: []
-    };
-
-    rows.forEach(row => {
-            try {
-                if (row[locationColumn]) {
-                    let feature = {
-                        type: 'Feature',
-                        properties: row,
-                        geometry: {
-                            type: 'Point',
-                            coordinates: row[locationColumn]
-                        }
-                    };
-                    points.features.push(feature);
-                }
-            } catch (e) {
-                console.log(`Bad location: ${row[locationColumn]}`);
-                // Just don't push it 
-            }
-        });
-    return points;
-}
-
-// Convert a table of rows to a Mapbox datasource
-function rowsToPointsLayer(rows) {
-    console.log(maxs);
-    let points = { type: 'geojson', data: rowsToPoints(rows) } ;
-    function addPoints() {
-        map.addSource('dataset', points);
-        map.addLayer(pointLayer());
-        map.addLayer(pointLayer(['==',locationColumn, '-'], true)); // highlight layer
-        
-        document.querySelectorAll('#loading')[0].outerHTML='';
-
-        map.on('mousemove', mousemove);
-    }
-    whenLoaded(addPoints);
-}
-
-
-
-// TODO obviously merge with rowsToPointsLayer
-function rowsToPolygonsLayer(rows) {
-    // we don't need to construct a "polygon layer", the geometry exists in Mapbox already
+function addPolygonsToMap(rows) {
+    // we don't need to construct a "polygon datasource", the geometry exists in Mapbox already
     // https://data.melbourne.vic.gov.au/Economy/Employment-by-block-by-industry/b36j-kiy4
     
-    //dataColumn = 'Accommodation'; // ### just temporary.
-    
-    function addPolygons() {
-        // add CLUE blocks polygon dataset, ripe for choroplething
-        map.addSource('dataset', { 
-            type: 'vector', 
-            url: 'mapbox://opencouncildata.aedfmyp8'
-        });
-        map.addLayer(polygonLayer());
-        //map.addLayer(polygonLayer('dataset', ['==', locationColumn, '-'], true)); // highlight layer
-        
-        document.querySelectorAll('#loading')[0].outerHTML='';
-
-        map.on('mousemove', mousemove);
-    }
-    whenLoaded(() => {
-        addPolygons();
-        // after source data is loaded, safe to mess with style
-        false && whenLoaded(() =>
-            setVisColumn(numericColumns[Math.floor(Math.random() * numericColumns.length)]));
+    // add CLUE blocks polygon dataset, ripe for choroplething
+    map.addSource('dataset', { 
+        type: 'vector', 
+        url: 'mapbox://opencouncildata.aedfmyp8'
     });
-
+    map.addLayer(polygonLayer());
+    //map.addLayer(polygonLayer('dataset', ['==', locationColumn, '-'], true)); // highlight layer
+    
 }
+//false && whenLoaded(() =>
+//  setVisColumn(sourceData.numericColumns[Math.floor(Math.random() * sourceData.numericColumns.length)]));
 
-function whenLoaded(f) {
-    if (map.loaded())
-        f();
-    else
-        map.once('load', f);
-}
-let def = (a, b) => a !== undefined ? a : b;
     
 function showFeatureTable(feature) {
     function rowsInArray(array, classStr) {
@@ -267,7 +244,7 @@ function mousemove(e) {
         //d3s.selectAll('#features td').on('click', function(e) { console.log(this);   });
         
         if (sourceData.shape === 'point') {
-            map.setFilter('points-highlight', ['==', locationColumn, feature.properties[locationColumn]]); // we don't have any other reliable key?
+            map.setFilter('points-highlight', ['==', sourceData.locationColumn, feature.properties[sourceData.locationColumn]]); // we don't have any other reliable key?
         } else {
             // ### TODO add polygon highlights 
             console.log(feature.properties);
@@ -277,40 +254,88 @@ function mousemove(e) {
     }
 }
 
-/********** Here we drive the thing - pick a dataset to load, and go for it. ************/
 
-function keyToId(key) {
-    return key.replace(/[^A-Za-z0-9_-]/g, '_');
-}
+//function keyToId(key) {
+//    return key.replace(/[^A-Za-z0-9_-]/g, '_');
+//}
+
+function chooseDataset() {
+    if (window.location.hash) {
+        return window.location.hash.replace('#','');
+    }
 
 
-// known point datasets that work ok
-var choices = [
-    'b36j-kiy4', // employment
-    '234q-gg83', // floor space by use by block
-    'c3gt-hrz6' // business establishments
-];
-let dataId;
-if (window.location.hash) {
-    dataId = window.location.hash.replace('#','');
-} else {
-    dataId =  choices[Math.floor(Math.random() * choices.length)];
+    // known point datasets that work ok
+    var clueChoices = [
+        'b36j-kiy4', // employment
+        '234q-gg83', // floor space by use by block
+        'c3gt-hrz6' // business establishments -- this one is complete, the others have gappy data for confidentiality
+    ];
+
+    var pointChoices = [
+        'fp38-wiyy', // trees
+        'ygaw-6rzq', // pedestrian sensor locations
+        '84bf-dihi', // Venues for events
+        'tdvh-n9dv', // Live bike share
+        'gh7s-qda8', // DAM
+        'sfrg-zygb', // Cafes and Restaurants
+        'ew6k-chz4', // Bio Blitz 2016
+        '7vrd-4av5', // wayfinding
+        'ss79-v558', // bus stops
+        'mffi-m9yn', // pubs
+        'svux-bada', // soil textures - nice one
+        'qjwc-f5sh', // community food guide - good
+        'fthy-zajy', // properties over $2.5m
+        'tx8h-2jgi', // accessible toilets
+        '6u5z-ubvh', // bicycle parking
+        //bs7n-5veh, // business establishments. 100,000 rows, too fragile.
+        ];
+
     document.querySelectorAll('#caption h1')[0].innerHTML = 'Loading random dataset...';
+    
+    return 'c3gt-hrz6';
+    //return 'gh7s-qda8';
+    //return clueChoices[Math.floor(Math.random() * clueChoices.length)];
 }
-var x = new SourceData();
 
-var sourceData = new SourceData(dataId);
-    sourceData.load()
-    .then((rows) => {
-        document.querySelector('#caption h1').innerHTML = sourceData.name;
-        document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
-        document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
-        //
-        if (sourceData.shape === 'point') {
-            rowsToPointsLayer(rows);
-        } else {
-            rowsToPolygonsLayer(rows);
-        }
-        showFeatureTable();
+function showCaption(name, dataId) {
+    document.querySelector('#caption h1').innerHTML = name;
+    document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
+    document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
+ 
+    // ### Hide it for now
+    document.querySelector('#caption').style.display = 'none';
+ }
+
+let dataId = chooseDataset();
+
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v9',
+    center: [144.95, -37.813],
+    zoom: 13,
+    pitch: 45 // TODO revert for flat
+});
+
+let sourceData = new SourceData(dataId);
+
+    sourceData
+    .load()
+    .then(rows => {
+        showCaption(sourceData.name, dataId);
+
+        whenLoaded(() => {
+            if (sourceData.shape === 'point') {
+                addPointsToMap(rows);
+            } else {
+                addPolygonsToMap(rows);
+            }
+            showFeatureTable(); 
+            document.querySelectorAll('#loading')[0].outerHTML='';
+
+            map.on('mousemove', mousemove);
+        });
+        //var fp = new FlightPath(map);
+
     });
 
