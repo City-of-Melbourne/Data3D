@@ -8,24 +8,31 @@
         <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
         <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
         <!-- <link href='https://api.mapbox.com/mapbox-gl-js/v0.30.0/mapbox-gl.css' rel='stylesheet' /> -->
-        <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet' />
-        <script src='https://api.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.js'></script>
+        <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
+        <script src='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.js'></script>
+
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
         
     <body>
-
-        <div id="map">
-            
-        </div>
-        <div id="caption">
-            <h1>Loading dataset...</h1>
-            <a id="source" href="https://data.melbourne.vic.gov.au/Economy/Cafes-and-Restaurants-only/sfrg-zygb/data">Source: City of Melbourne Open Data</a><br>
-            <span id="share"></span><br>
-            <small id="loading">Loading data...</small>
-        </div>
         <div id="features"></div>
-        <div id="legends">
-            <div id="legend-enum" class="legend"> </div>
-            <div id="legend-numeric" class="legend"></div>
+        <div id="mapcontainer">
+            <div id="map">
+                
+            </div>
+            <div id="mapoverlay">
+                <div id="caption">
+                    <h1>Loading dataset...</h1>
+                    <!-- <a id="source" href="https://data.melbourne.vic.gov.au/Economy/Cafes-and-Restaurants-only/sfrg-zygb/data">Source: City of Melbourne Open Data</a><br> -->
+                    <span id="share"></span><br>
+                    <small id="loading">Loading data...</small>
+                </div>
+                <div id="legends">
+                    <div id="legend-enum" class="legend"> </div>
+                    <div id="legend-numeric" class="legend"></div>
+                </div>
+                <div id="footer">data.melbourne.vic.gov.au</div>
+                <div id="logo"></div>
+            </div>
         </div>
         <link rel="stylesheet" href="assets/styles/styles.css?v=@version">
 

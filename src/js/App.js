@@ -7,7 +7,9 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJia
 
 /*
 Pedestrian sensor locations: ygaw-6rzq
-Trees: http://localhost:3002/#fp38-wiyy
+
+**Trees: http://localhost:3002/#fp38-wiyy
+
 Event bookings: http://localhost:3002/#84bf-dihi
 Bike share stations: http://localhost:3002/#tdvh-n9dv
 DAM: http://localhost:3002/#gh7s-qda8
@@ -68,7 +70,8 @@ function setPolygonHeightStyle(dataColumn) {
         property: 'block_id',
         type: 'categorical',
         stops: sourceData.filteredRows()
-            .map(row => [row[sourceData.locationColumn], 'rgb(0,0,' + Math.round(40 + row[dataColumn] / sourceData.maxs[dataColumn] * 200) + ')'])
+            //.map(row => [row[sourceData.locationColumn], 'rgb(0,0,' + Math.round(40 + row[dataColumn] / sourceData.maxs[dataColumn] * 200) + ')'])
+            .map(row => [row[sourceData.locationColumn], 'hsl(340,88%,' + Math.round(20 + row[dataColumn] / sourceData.maxs[dataColumn] * 50) + '%)'])
     });
     map.setFilter('polygons', ['!in', 'block_id', ...(/* ### TODO generalise */ 
         sourceData.filteredRows()
@@ -82,6 +85,9 @@ let dataColumn;
 
 // switch visualisation to using this column
 function setVisColumn(columnName) {
+    if (columnName === undefined) {
+        columnName = sourceData.textColumns[0];
+    }
     dataColumn = columnName;
     console.log('Data column: ' + dataColumn);
 
@@ -130,11 +136,11 @@ function rowsToPointDatasource(rows) {
     return datasource;
 }
 
-function pointLayer(filter, highlight) {
+function pointLayer(sourceId, filter, highlight) {
     let ret = {
         id: 'points' + (highlight ? '-highlight': ''),
         type: 'circle',
-        source: 'dataset',
+        source: sourceId,
         paint: {
 //            'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
             'circle-color': highlight ? 'rgba(0,0,0,0)' : 'hsl(220,80%,50%)',
@@ -153,17 +159,19 @@ function pointLayer(filter, highlight) {
 
 
 // Convert a table of rows to a Mapbox datasource
-function addPointsToMap(rows, map) {
-    map.addSource('dataset', rowsToPointDatasource(rows) );
-    map.addLayer(pointLayer());
-    map.addLayer(pointLayer(['==',sourceData.locationColumn, '-'], true)); // highlight layer
+function addPointsToMap(dataset, map) {
+    let sourceId = 'dataset-' + dataset.dataId;
+    if (!map.getSource(sourceId))        
+        map.addSource(sourceId, rowsToPointDatasource(dataset.rows) );
+    map.addLayer(pointLayer(sourceId));
+    map.addLayer(pointLayer(sourceId, ['==',sourceData.locationColumn, '-'], true)); // highlight layer
 }
 
-function polygonLayer(highlight) {
-    let ret = {
+function polygonLayer(sourceId) {
+    return {
         id: 'polygons',
         type: 'fill-extrusion',
-        source: 'dataset',
+        source: sourceId,
         'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
         paint: { 
              'fill-extrusion-opacity': 0.8,
@@ -171,13 +179,12 @@ function polygonLayer(highlight) {
              'fill-extrusion-color': '#003'
          },
     };
-    return ret;
 }
-function polygonHighlightLayer() {
-    return{
+function polygonHighlightLayer(sourceId) {
+    return {
         id: 'polygons-highlight',
         type: 'fill',
-        source: 'dataset',
+        source: sourceId,
         'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
         paint: { 
              'fill-color': 'white'
@@ -186,24 +193,26 @@ function polygonHighlightLayer() {
     };
 }
 
-function addPolygonsToMap(rows, map) {
+function addPolygonsToMap(dataset, map) {
     // we don't need to construct a "polygon datasource", the geometry exists in Mapbox already
     // https://data.melbourne.vic.gov.au/Economy/Employment-by-block-by-industry/b36j-kiy4
     
     // add CLUE blocks polygon dataset, ripe for choroplething
-    map.addSource('dataset', { 
-        type: 'vector', 
-        url: 'mapbox://opencouncildata.aedfmyp8'
-    });
-    map.addLayer(polygonHighlightLayer());
-    map.addLayer(polygonLayer());
+    let sourceId = 'dataset-' + dataset.dataId;
+    if (!map.getSource(sourceId))        
+        map.addSource(sourceId, { 
+            type: 'vector', 
+            url: 'mapbox://opencouncildata.aedfmyp8'
+        });
+    map.addLayer(polygonHighlightLayer(sourceId));
+    map.addLayer(polygonLayer(sourceId));
     
 }
 //false && whenMapLoaded(() =>
 //  setVisColumn(sourceData.numericColumns[Math.floor(Math.random() * sourceData.numericColumns.length)]));
 
     
-function showFeatureTable(feature) {
+function showFeatureTable(feature, sourceData) {
     function rowsInArray(array, classStr) {
         return '<table>' + 
             Object.keys(feature)
@@ -251,7 +260,7 @@ function mousemove(e) {
         map.getCanvas().style.cursor = 'pointer';
 
         lastFeature = feature;
-        showFeatureTable(feature.properties);
+        showFeatureTable(feature.properties, sourceData);
         
         if (sourceData.shape === 'point') {
             map.setFilter('points-highlight', ['==', sourceData.locationColumn, feature.properties[sourceData.locationColumn]]); // we don't have any other reliable key?
@@ -310,45 +319,127 @@ function chooseDataset() {
 
 function showCaption(name, dataId) {
     document.querySelector('#caption h1').innerHTML = name;
-    document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
-    document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
+    //document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
+    //document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
  
     // ### Hide it for now
-    document.querySelector('#caption').style.display = 'none';
+    //document.querySelector('#caption').style.display = 'none';
  }
+
+
+let datasetNo = 0;
+
+const datasets = [
+    { delay: 1000, dataset: new SourceData('tdvh-n9dv') },
+    { delay: 9000, dataset: new SourceData('c3gt-hrz6'), column: 'Accommodation' },
+    { delay: 10000, dataset: new SourceData('b36j-kiy4'), column: 'Arts and Recreation Services' },
+    //{ delay: 3000, dataset: new SourceData('c3gt-hrz6'), column: 'Retail Trade' },
+    { delay: 9000, dataset: new SourceData('c3gt-hrz6'), column: 'Construction' }
+    //{ delay: 1000, dataset: 'b36j-kiy4' },
+    //{ delay: 2000, dataset: '234q-gg83' }
+];
+
+function nextDataset() {
+    let d = datasets[datasetNo];
+    showDataset(map, d.dataset);
+    setVisColumn(d.column);
+    datasetNo = (datasetNo + 1) % datasets.length;
+    setTimeout(nextDataset, datasets[datasetNo].delay);
+}
+
+function tweakBasemap(map) {
+    var placecolor = '#888'; //'rgb(206, 219, 175)';
+    var roadcolor = '#777'; //'rgb(240, 191, 156)';
+    map.getStyle().layers.forEach(layer => {
+        if (layer.paint['text-color'] === 'hsl(0, 0%, 60%)')
+            map.setPaintProperty(layer.id, 'text-color', 'hsl(0, 0%, 20%)');
+        else if (layer.paint['text-color'] === 'hsl(0, 0%, 70%)')
+            map.setPaintProperty(layer.id, 'text-color', 'hsl(0, 0%, 50%)');
+        else if (layer.paint['text-color'] === 'hsl(0, 0%, 78%)')
+            map.setPaintProperty(layer.id, 'text-color', 'hsl(0, 0%, 45%)'); // roads mostly
+        else if (layer.paint['text-color'] === 'hsl(0, 0%, 90%)')
+            map.setPaintProperty(layer.id, 'text-color', 'hsl(0, 0%, 50%)');
+    });
+    ['poi-parks-scalerank1', 'poi-parks-scalerank1', 'poi-parks-scalerank1'].forEach(id => {
+        map.setPaintProperty(id, 'text-color', '#333');
+    });
+
+    map.removeLayer('place-city-lg-s'); // remove the Melbourne label itself.
+
+}
+
+function loadDatasets() {
+    return Promise.all(datasets.map(d => d.dataset.load()))
+        .then(() => Promise.resolve(datasets[0].dataset));
+}
+
+function loadOneDataset() {
+    return new SourceData(chooseDataset()).load();
+}
+
+function showDataset(map, dataset) {
+    sourceData = dataset; // global variable...heh.
+
+    showCaption(dataset.name, dataset.dataId);
+
+    if (map.getLayer('polygons')) {
+        map.removeLayer('polygons');
+        map.removeLayer('polygons-highlight');
+    }
+    if (map.getLayer('points')) {
+        map.removeLayer('points');
+        map.removeLayer('points-highlight');
+    }
+
+
+    if (dataset.shape === 'point') {
+        addPointsToMap(dataset, map);
+    } else {
+        addPolygonsToMap(dataset, map);
+    }
+    showFeatureTable(undefined, dataset); 
+}
 
 let map, sourceData;
 
 (function start() {
+    let demoMode = window.location.hash === '#demo';
+    if (demoMode) {
+        // if we did this after the map was loading, call map.resize();
+        document.querySelector('#features').style.display = 'none';        
+    }
 
     map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/dark-v9',
         center: [144.95, -37.813],
         zoom: 13,
-        pitch: 45 // TODO revert for flat
+        pitch: 45, // TODO revert for flat
+        attributionControl: false
     });
+    map.addControl(new mapboxgl.AttributionControl(), 'bottom-left');
+    map.once('load', () => tweakBasemap(map));
 
-    let dataId = chooseDataset();
-    sourceData = new SourceData(dataId);
 
-        sourceData
-        .load()
-        .then(rows => {
-            showCaption(sourceData.name, dataId);
 
-            whenMapLoaded(map, () => {
-                if (sourceData.shape === 'point') {
-                    addPointsToMap(rows, map);
-                } else {
-                    addPolygonsToMap(rows, map);
-                }
-                showFeatureTable(); 
-                document.querySelectorAll('#loading')[0].outerHTML='';
+    (demoMode ? loadDatasets() : loadOneDataset())
+    .then(dataset => {
+        
+        showCaption(dataset.name, dataset.dataId);
 
-                map.on('mousemove', mousemove);
-            });
-            //var fp = new FlightPath(map);
+        whenMapLoaded(map, () => {
+            
+            showDataset(map, dataset);
+            document.querySelectorAll('#loading')[0].outerHTML='';
 
+            map.on('mousemove', mousemove);
+
+            if (demoMode) {
+                nextDataset();
+                var fp = new FlightPath(map);
+            }
         });
+        
+
+    });
 })();

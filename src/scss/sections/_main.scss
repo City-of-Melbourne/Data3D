@@ -1,56 +1,28 @@
 html , body
  { 
-    // height: 100%; 
+     height: 100%; 
     margin: 0; 
 }
+
 
 $scheme: 'dark';
 $darkbg: #eee;
 $featurewidth: 350px;
+
+
 body {
-    //display: flex;
-    //justify-content: center;
+    display: flex;
     
-}
-#map {
-    position:absolute;
-    width:calc(100% - 350px);
-    height:100%;
-}
-
-
-#caption {
-    position:absolute;
-    top: 1em;
-    width:600px;
-    left:calc(50% - 300px - 175px); // 175px is half width of feature bar
-    padding:1em;
-    //border: 1px solid lightgray;
-    
-    @if $scheme == 'light' {
-        background:hsla(0,0,100%,0.8);
-        box-shadow: 0px 0px 4px 4px white;
-    } @else {
-        background: $darkbg;
-    }
-}
-
-#caption h1 {
-    font-size:1rem;
-    line-height:1.5rem;
-    text-align:center;
-}
-
-#source {
-    font-size:0.75em;
 }
 
 #features {
-    position: absolute;
+    //position: absolute;
+    position: relative;
+    //float:left;
     top: 0;
     right: 0;
     bottom: 0;
-    width: 350px;
+    width: $featurewidth;
     overflow: auto;
     @if $scheme == 'light' {
         background: rgba(255, 255, 255, 0.8);
@@ -58,6 +30,113 @@ body {
         background: $darkbg;
     }
 }    
+
+
+#mapcontainer {
+    height: 100%;
+    //width: 100%;
+    overflow: auto;
+    flex-grow: 1;
+    position:relative;
+}
+#map, #mapoverlay {
+    position:absolute;
+    //width:calc(100% - 350px);
+    width:100%;
+    height:100%;
+}
+
+//#mapoverlay { display: none; }
+
+#map {
+    //position: relative;
+}
+
+#mapoverlay {
+    position: absolute;
+    // Might be better to move this whole contents into map.getCanvasContainer()
+    pointer-events: none;
+}
+
+// inside #mapoverlay
+#caption, #footer {
+    position: relative;
+    width:800px; //$captionwidth;
+    margin: 0 auto;
+}
+
+#footer {
+    position: absolute;
+    bottom: 1em;
+    width:100%;
+}
+
+$captionwidth: 8
+00px;
+
+#caption {
+    top: 1em;
+    padding:1em;
+    //border: 1px solid lightgray;
+    /*    
+    @if $scheme == 'light' {
+        background:hsla(0,0,100%,0.8);
+        box-shadow: 0px 0px 4px 4px white;
+    } @else {
+        background: $darkbg;
+    }
+    */
+    background: transparent;
+}
+
+#footer {
+    color: rgb(0,183,79); // CoM Pop Green
+    font-family: CoM;
+    font-size: 34px;
+    text-align:center;
+}
+
+
+
+
+#caption h1 {
+    /*font-size:1rem;
+    line-height:1.5rem;
+    text-align:center;*/
+
+    font-size: 3rem;
+    text-align:center;
+    font-weight:bold;
+    color: #eee; // rgb(227, 4, 80);  CoM Pop Magenta //#eee;
+
+}
+#caption h1, #footer {
+     -webkit-text-stroke: 1px black;
+    text-shadow:
+       1px 1px 0 #000,
+     -1px -1px 0 #000,  
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+       1px 1px 0 #000;
+
+
+}
+
+#logo {
+    background-image:url(../images/com-masterlogo.svg);
+    width: 140px;
+    height:40px;
+    position: absolute;
+    bottom:1em;
+    right: 40px;
+    background-size:cover;
+}
+
+#source {
+    font-size:0.75em;
+}
+
+
 
 #features {
     font-size:12px;
@@ -106,14 +185,14 @@ body {
 }
 
 #features h4 {
-    font-family:sans-serif;
+    //font-family:sans-serif;
     margin: 1em 0.5em 0.25em;
 }
 
 #legends {
     position: absolute;
     top: 10px;
-    right: 360px;
+    right: 10px;
 }
 .legend {
     @if scheme == 'light' {
@@ -160,4 +239,8 @@ body {
     text-align: right;
     font-size:12px;
     margin-bottom:1em;
+}
+
+.mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+    background:grey;
 }

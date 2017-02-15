@@ -20,7 +20,7 @@ export class SourceData {
         this.frequencies = {};            // 
         this.sortedFrequencies = {};      // most frequent values in each text column
         this.shape = 'point';             // point or polygon (CLUE block)
-        this.sourceRows = undefined;      // processed rows
+        this.rows = undefined;            // processed rows
         this.blockIndex = {};             // cache of CLUE block IDs
     }
 
@@ -153,7 +153,7 @@ export class SourceData {
                 this.computeSortedFrequencies();
                 if (this.shape === 'polygon')
                     this.computeBlockIndex();
-                return rows;
+                return this;
             });
         });
     }
