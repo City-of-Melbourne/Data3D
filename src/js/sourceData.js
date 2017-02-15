@@ -4,7 +4,10 @@ var d3 = require('d3.promise');
 function def(a, b) {
     return a !== undefined ? a : b;
 }
-
+/*
+Manages fetching a dataset from Socrata and preparing it for visualisation by
+counting field value frequencies etc. 
+*/
 export class SourceData {
     constructor(dataId, activeCensusYear) {
         this.dataId = dataId;

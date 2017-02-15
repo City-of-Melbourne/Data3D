@@ -3,6 +3,7 @@
 import * as legend from './legend';
 import { SourceData } from './sourceData';
 import { FlightPath } from './flightPath';
+import { datasets } from './cycleDatasets';
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJiajVwaHJ2In0.RN7KywMOxLLNmcTFfn0cig';
 
 /*
@@ -159,11 +160,11 @@ function pointLayer(sourceId, filter, highlight) {
 
 
 // Convert a table of rows to a Mapbox datasource
-function addPointsToMap(dataset, map) {
+function addPointsToMap(dataset, map, filter) {
     let sourceId = 'dataset-' + dataset.dataId;
     if (!map.getSource(sourceId))        
         map.addSource(sourceId, rowsToPointDatasource(dataset.rows) );
-    map.addLayer(pointLayer(sourceId));
+    map.addLayer(pointLayer(sourceId, filter));
     map.addLayer(pointLayer(sourceId, ['==',sourceData.locationColumn, '-'], true)); // highlight layer
 }
 
@@ -275,10 +276,6 @@ function mousemove(e) {
 }
 
 
-//function keyToId(key) {
-//    return key.replace(/[^A-Za-z0-9_-]/g, '_');
-//}
-
 function chooseDataset() {
     if (window.location.hash) {
         return window.location.hash.replace('#','');
@@ -313,41 +310,21 @@ function chooseDataset() {
     document.querySelectorAll('#caption h1')[0].innerHTML = 'Loading random dataset...';
     
     return 'c3gt-hrz6';
-    //return 'gh7s-qda8';
-    //return clueChoices[Math.floor(Math.random() * clueChoices.length)];
 }
 
-function showCaption(name, dataId) {
-    document.querySelector('#caption h1').innerHTML = name;
+function showCaption(name, dataId, caption) {
+    if (caption) {
+        document.querySelector('#caption h1').innerHTML = caption;
+    } else {
+        document.querySelector('#caption h1').innerHTML = name;
+    }
+    // TODO reinstate for non-demo mode.
     //document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
     //document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
  
-    // ### Hide it for now
-    //document.querySelector('#caption').style.display = 'none';
  }
 
-
-let datasetNo = 0;
-
-const datasets = [
-    { delay: 1000, dataset: new SourceData('tdvh-n9dv') },
-    { delay: 9000, dataset: new SourceData('c3gt-hrz6'), column: 'Accommodation' },
-    { delay: 10000, dataset: new SourceData('b36j-kiy4'), column: 'Arts and Recreation Services' },
-    //{ delay: 3000, dataset: new SourceData('c3gt-hrz6'), column: 'Retail Trade' },
-    { delay: 9000, dataset: new SourceData('c3gt-hrz6'), column: 'Construction' }
-    //{ delay: 1000, dataset: 'b36j-kiy4' },
-    //{ delay: 2000, dataset: '234q-gg83' }
-];
-
-function nextDataset() {
-    let d = datasets[datasetNo];
-    showDataset(map, d.dataset);
-    setVisColumn(d.column);
-    datasetNo = (datasetNo + 1) % datasets.length;
-    setTimeout(nextDataset, datasets[datasetNo].delay);
-}
-
-function tweakBasemap(map) {
+ function tweakBasemap(map) {
     var placecolor = '#888'; //'rgb(206, 219, 175)';
     var roadcolor = '#777'; //'rgb(240, 191, 156)';
     map.getStyle().layers.forEach(layer => {
@@ -368,19 +345,13 @@ function tweakBasemap(map) {
 
 }
 
-function loadDatasets() {
-    return Promise.all(datasets.map(d => d.dataset.load()))
-        .then(() => Promise.resolve(datasets[0].dataset));
-}
-
-function loadOneDataset() {
-    return new SourceData(chooseDataset()).load();
-}
-
-function showDataset(map, dataset) {
+/*
+  Refresh the map view for this new dataset.
+*/
+function showDataset(map, dataset, filter, caption) {
     sourceData = dataset; // global variable...heh.
 
-    showCaption(dataset.name, dataset.dataId);
+    showCaption(dataset.name, dataset.dataId, caption);
 
     if (map.getLayer('polygons')) {
         map.removeLayer('polygons');
@@ -393,12 +364,40 @@ function showDataset(map, dataset) {
 
 
     if (dataset.shape === 'point') {
-        addPointsToMap(dataset, map);
+        addPointsToMap(dataset, map, filter);
     } else {
-        addPolygonsToMap(dataset, map);
+        addPolygonsToMap(dataset, map, filter);
     }
     showFeatureTable(undefined, dataset); 
 }
+
+
+
+let datasetNo = 0;
+
+
+/* Advance and display the next dataset in our loop */
+function nextDataset(firstTime) {
+    if (!firstTime) {
+        datasetNo = (datasetNo + 1) % datasets.length;
+    }
+    let d = datasets[datasetNo];
+    showDataset(map, d.dataset, d.filter, d.caption);
+    setVisColumn(d.column);
+    setTimeout(nextDataset, datasets[datasetNo].delay);
+}
+
+/* Pre download all datasets in the loop */
+function loadDatasets() {
+    return Promise
+        .all(datasets.map(d => d.dataset.load()))
+        .then(() => datasets[0].dataset);
+}
+
+function loadOneDataset() {
+    return new SourceData(chooseDataset()).load();
+}
+
 
 let map, sourceData;
 
@@ -428,14 +427,16 @@ let map, sourceData;
         showCaption(dataset.name, dataset.dataId);
 
         whenMapLoaded(map, () => {
-            
-            showDataset(map, dataset);
+            if (demoMode) {
+                nextDataset(true);
+            } else {
+                showDataset(map, dataset);
+            }
             document.querySelectorAll('#loading')[0].outerHTML='';
 
             map.on('mousemove', mousemove);
 
             if (demoMode) {
-                nextDataset();
                 var fp = new FlightPath(map);
             }
         });
