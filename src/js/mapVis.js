@@ -173,7 +173,7 @@ export class MapVis {
                     this.map.setFilter('points-highlight', ['==', this.sourceData.locationColumn, f.properties[this.sourceData.locationColumn]]); // we don't have any other reliable key?
                 } else {
                     this.map.setFilter('polygons-highlight', ['==', 'block_id', f.properties.block_id]); // don't have a general way to match other kinds of polygons
-                    console.log(f.properties);
+                    //console.log(f.properties);
                 }
             } else {
                 this.map.getCanvas().style.cursor = '';

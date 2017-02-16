@@ -107,11 +107,9 @@ function chooseDataset() {
 }
 
 function showCaption(name, dataId, caption) {
-    if (caption) {
-        document.querySelector('#caption h1').innerHTML = caption;
-    } else {
-        document.querySelector('#caption h1').innerHTML = name;
-    }
+    document.querySelector('#caption h1').innerHTML = caption || '';
+    document.querySelector('#footer .dataset').innerHTML = name || '';
+    
     // TODO reinstate for non-demo mode.
     //document.querySelector('#source').setAttribute('href', 'https://data.melbourne.vic.gov.au/d/' + dataId);
     //document.querySelector('#share').innerHTML = `Share this: <a href="https://city-of-melbourne.github.io/Data3D/#${dataId}">https://city-of-melbourne.github.io/Data3D/#${dataId}</a>`;    
@@ -151,21 +149,61 @@ function showDataset(map, dataset, filter, caption) {
     return mapvis;
 }
 
+/*
+  Show a dataset that already exists on Mapbox
+*/
+function showMapboxDataset(map, dataset) {
+    if (!map.getSource(dataset.mapbox.source)) {
+        map.addSource(dataset.mapbox.source, {
+            type: 'vector',
+            url: dataset.mapbox.source
+        });
+    }
+    if (!map.getLayer(dataset.mapbox.id)) {
+        map.addLayer(dataset.mapbox);
+    }
+    showCaption(dataset.name, dataset.dataId, dataset.caption);
+}
+
+
 /* Advance and display the next dataset in our loop */
 function nextDataset(map, datasetNo) {
-    let d = datasets[datasetNo];
-    let mapvis = showDataset(map, d.dataset, d.filter, d.caption);
-    mapvis.setVisColumn(d.column);
+    let d = datasets[datasetNo], nextD = datasets[(datasetNo + 1) % datasets.length], mapvis;
+    if (d.mapbox) {
+        showMapboxDataset(map, d);
+    } else {
+        mapvis = showDataset(map, d.dataset, d.filter, d.caption);
+        mapvis.setVisColumn(d.column);
+    }
+    // We're aiming to arrive at the viewpoint 1/3 of the way through the dataset's appearance
+    // and leave 2/3 of the way through.
+    if (d.flyTo && !map.isMoving()) {
+        d.flyTo.duration = d.delay/3;// so it lands about a third of the way through the dataset's visibility.
+        map.flyTo(d.flyTo);
+    }
+    
+    if (nextD.flyTo) {
+        nextD.flyTo.duration = d.delay/3.0 + nextD.delay/3.0;// so it lands about a third of the way through the dataset's visibility.
+        setTimeout(() => {
+            map.flyTo(nextD.flyTo);
+        }, d.delay * 2.0/3.0);
+    }
+
     setTimeout(() => {
-        mapvis.remove();
+        if (mapvis)
+            mapvis.remove();
+        
+        if (d.mapbox)
+            map.removeLayer(d.mapbox.id);
+
         nextDataset(map, (datasetNo + 1) % datasets.length);
-    }, d.delay / 10);
+    }, d.delay );
 }
 
 /* Pre download all datasets in the loop */
 function loadDatasets() {
     return Promise
-        .all(datasets.map(d => d.dataset.load()))
+        .all(datasets.map(d => d.dataset ? d.dataset.load() : Promise.resolve ()))
         .then(() => datasets[0].dataset);
 }
 
@@ -178,28 +216,37 @@ function loadOneDataset() {
     if (demoMode) {
         // if we did this after the map was loading, call map.resize();
         document.querySelector('#features').style.display = 'none';        
+        document.querySelector('#legends').style.display = 'none';        
     }
 
     let map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/dark-v9',
         center: [144.95, -37.813],
-        zoom: 13,
+        zoom: 15,//13
         pitch: 45, // TODO revert for flat
         attributionControl: false
     });
-    map.addControl(new mapboxgl.AttributionControl(), 'bottom-left');
+    map.addControl(new mapboxgl.AttributionControl(), 'top-left');
     map.once('load', () => tweakBasemap(map));
-
+    map.on('moveend', e=> {
+        console.log({
+            center: map.getCenter(),
+            zoom: map.getZoom(),
+            bearing: map.getBearing(),
+            pitch: map.getPitch()
+        });
+    });
 
     (demoMode ? loadDatasets() : loadOneDataset())
     .then(dataset => {
         
-        showCaption(dataset.name, dataset.dataId);
+        if (dataset) 
+            showCaption(dataset.name, dataset.dataId);
 
         whenMapLoaded(map, () => {
             if (demoMode) {
-                nextDataset(map, 0);
+                nextDataset(map, 5);
             } else {
                 showDataset(map, dataset);
             }
