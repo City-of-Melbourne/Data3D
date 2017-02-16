@@ -143,7 +143,7 @@ export class SourceData {
 
                 this.dataId = props.childViews[0];
 
-                return d3.json('https://data.melbourne.vic.gov.au/api/views/' + dataId)
+                return d3.json('https://data.melbourne.vic.gov.au/api/views/' + this.dataId)
                     .then(props => this.chooseColumnTypes(props.columns));
             } else {
                 this.chooseColumnTypes(props.columns);
