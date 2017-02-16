@@ -56,6 +56,7 @@ body {
     position: absolute;
     // Might be better to move this whole contents into map.getCanvasContainer()
     pointer-events: none;
+    overflow:hidden; // because...I don't know why.
 }
 
 // inside #mapoverlay
@@ -67,12 +68,11 @@ body {
 
 #footer {
     position: absolute;
-    bottom: 1em;
+    bottom: 34px;
     width:100%;
 }
 
-$captionwidth: 8
-00px;
+$captionwidth: 800px;
 
 #caption {
     top: 1em;
@@ -87,13 +87,22 @@ $captionwidth: 8
     }
     */
     background: transparent;
+    margin-left: 0;
 }
 
-#footer {
+#footer .dataset {
+    color: #eee;
+    font-family: GothamThin;
+    font-size: 16px;
+    margin-left:34px;
+    margin-bottom:0.5em;
+}
+
+#footer .url {
     color: rgb(0,183,79); // CoM Pop Green
     font-family: CoM;
     font-size: 34px;
-    text-align:center;
+    margin-left:34px;
 }
 
 
@@ -104,13 +113,13 @@ $captionwidth: 8
     line-height:1.5rem;
     text-align:center;*/
 
-    font-size: 3rem;
-    text-align:center;
+
+    //text-align:center;
     font-weight:bold;
     color: #eee; // rgb(227, 4, 80);  CoM Pop Magenta //#eee;
 
 }
-#caption h1, #footer {
+#caption h1 {
      -webkit-text-stroke: 1px black;
     text-shadow:
        1px 1px 0 #000,
@@ -127,7 +136,7 @@ $captionwidth: 8
     width: 140px;
     height:40px;
     position: absolute;
-    bottom:1em;
+    bottom:32px;
     right: 40px;
     background-size:cover;
 }
