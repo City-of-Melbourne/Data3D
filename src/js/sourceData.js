@@ -29,7 +29,15 @@ export class SourceData {
 
 
     chooseColumnTypes (columns) {
-        var lc = columns.filter(col => col.dataTypeName === 'location' || col.dataTypeName === 'point' || col.name === 'Block ID')[0];
+        //var lc = columns.filter(col => col.dataTypeName === 'location' || col.dataTypeName === 'point' || col.name === 'Block ID')[0];
+        // "location" and "point" are both point data types, expressed differently.
+        // Otherwise, a "block ID" can be joined against the CLUE Block polygons which are in Mapbox.
+        let lc = columns.filter(col => col.dataTypeName === 'location' || col.dataTypeName === 'point')[0];
+        if (!lc) {
+            lc = columns.filter(col => col.name === 'Block ID')[0];
+        }
+
+
         if (lc.dataTypeName === 'point')
             this.locationIsPoint = true;
 
@@ -83,7 +91,7 @@ export class SourceData {
             if (this.locationIsPoint) {
                 return location.replace('POINT (', '').replace(')', '').split(' ').map(n => Number(n));
             } else if (this.shape === 'point') {
-                console.log(location.length);
+                //console.log(location.length);
                 return [Number(location.split(', ')[1].replace(')', '')), Number(location.split(', ')[0].replace('(', ''))];
             } else 
             return location;
@@ -122,8 +130,7 @@ export class SourceData {
             if (Object.keys(this.frequencies[col]).length < 2 || Object.keys(this.frequencies[col]).length > 20 && this.frequencies[col][this.sortedFrequencies[col][1]] <= 5) {
                 // It's boring if all values the same, or if too many different values (as judged by second-most common value being 5 times or fewer)
                 this.boringColumns.push(col);
-                console.log('Boring! '); 
-                console.log(this.frequencies[col]);
+                
             } else {
                 newTextColumns.push(col); // how do you safely delete from array you're looping over?
             }
@@ -131,10 +138,11 @@ export class SourceData {
 
         });
         this.textColumns = newTextColumns;
-        console.log(this.sortedFrequencies);
+        //console.log(this.sortedFrequencies);
     }
 
-    // return promise for rows
+    // Retrieve rows from Socrata (returns Promise). "New backend" views go through an additional step to find the real
+    // API endpoint.
     load() {
         return d3.json('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '.json')
         .then(props => {

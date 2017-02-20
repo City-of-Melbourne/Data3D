@@ -6,8 +6,8 @@ import { FlightPath } from './flightPath';
 import { datasets } from './cycleDatasets';
 import { MapVis } from './mapVis';
 console.log(datasets);
-mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJiajVwaHJ2In0.RN7KywMOxLLNmcTFfn0cig';
-
+//mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJiajVwaHJ2In0.RN7KywMOxLLNmcTFfn0cig';
+mapboxgl.accessToken = 'pk.eyJ1IjoiY2l0eW9mbWVsYm91cm5lIiwiYSI6ImNpejdob2J0czAwOWQzM21ubGt6MDVqaHoifQ.55YbqeTHWMK_b6CEAmoUlA';
 /*
 Pedestrian sensor locations: ygaw-6rzq
 
@@ -21,6 +21,23 @@ DAM: http://localhost:3002/#gh7s-qda8
 let def = (a, b) => a !== undefined ? a : b;
 
 let whenMapLoaded = (map, f) => map.loaded() ? f() : map.once('load', f);
+
+let clone = obj => JSON.parse(JSON.stringify(obj));
+
+const opacityProp = {
+            fill: 'fill-opacity',
+            circle: 'circle-opacity',
+            symbol: 'icon-opacity',
+            'fill-extrusion': 'fill-extrusion-opacity'
+        };
+
+// returns a value like 'circle-opacity', for a given layer style.
+function getOpacityProp(layer) {
+    if (layer.layout && layer.layout['text-field'])
+        return 'text-opacity';
+    else
+        return opacityProp[layer.type];
+}
 
 //false && whenMapLoaded(() =>
 //  setVisColumn(sourceData.numericColumns[Math.floor(Math.random() * sourceData.numericColumns.length)]));
@@ -95,7 +112,7 @@ function chooseDataset() {
         'mffi-m9yn', // pubs
         'svux-bada', // soil textures - nice one
         'qjwc-f5sh', // community food guide - good
-        'fthy-zajy', // properties over $2.5m
+        'fthi-zajy', // properties over $2.5m
         'tx8h-2jgi', // accessible toilets
         '6u5z-ubvh', // bicycle parking
         //bs7n-5veh, // business establishments. 100,000 rows, too fragile.
@@ -107,7 +124,7 @@ function chooseDataset() {
 }
 
 function showCaption(name, dataId, caption) {
-    document.querySelector('#caption h1').innerHTML = caption || '';
+    document.querySelector('#caption h1').innerHTML = /*(_datasetNo || '') + */(caption || name || '');
     document.querySelector('#footer .dataset').innerHTML = name || '';
     
     // TODO reinstate for non-demo mode.
@@ -140,41 +157,103 @@ function showCaption(name, dataId, caption) {
 /*
   Refresh the map view for this new dataset.
 */
-function showDataset(map, dataset, filter, caption) {
-    showCaption(dataset.name, dataset.dataId, caption);
+function showDataset(map, dataset, filter, caption, noFeatureInfo, options, invisible) {
+    
+    options = def(options, {});
+    if (invisible) {
+        options.invisible = true;
+    } else {
+        showCaption(dataset.name, dataset.dataId, caption);
+    }
 
-    let mapvis = new MapVis(map, dataset, filter, showFeatureTable);
+    let mapvis = new MapVis(map, dataset, filter, !noFeatureInfo? showFeatureTable : null, options);
 
     showFeatureTable(undefined, dataset, mapvis); 
     return mapvis;
 }
 
-/*
-  Show a dataset that already exists on Mapbox
-*/
-function showMapboxDataset(map, dataset) {
+function addMapboxDataset(map, dataset) {
     if (!map.getSource(dataset.mapbox.source)) {
         map.addSource(dataset.mapbox.source, {
             type: 'vector',
             url: dataset.mapbox.source
         });
     }
-    if (!map.getLayer(dataset.mapbox.id)) {
-        map.addLayer(dataset.mapbox);
+}
+/*
+  Show a dataset that already exists on Mapbox
+*/
+function showMapboxDataset(map, dataset, invisible) {
+    addMapboxDataset(map, dataset);
+    let style = map.getLayer(dataset.mapbox.id);
+    if (!style) {
+        //if (invisible)
+            //dataset.mapbox
+        style = clone(dataset.mapbox);
+        if (invisible) {
+            style.paint[getOpacityProp(style)] = 0;
+        }
+        map.addLayer(style);
+    } else {
+        map.setPaintProperty(dataset.mapbox.id, getOpacityProp(style), 0.9); // TODO set right opacity
     }
-    showCaption(dataset.name, dataset.dataId, dataset.caption);
+
+    if (!invisible) 
+        showCaption(dataset.name, dataset.dataId, dataset.caption);
 }
 
-
+let _datasetNo='';
 /* Advance and display the next dataset in our loop */
+    /*
+        Pre-load datasets by:
+        - calling the load/display code for the next dataset now, but with opacity 0
+        - keeping track of the layer ID
+        - if it's present when the dataset gets "shown", 
+    */
 function nextDataset(map, datasetNo) {
-    let d = datasets[datasetNo], nextD = datasets[(datasetNo + 1) % datasets.length], mapvis;
-    if (d.mapbox) {
-        showMapboxDataset(map, d);
-    } else {
-        mapvis = showDataset(map, d.dataset, d.filter, d.caption);
-        mapvis.setVisColumn(d.column);
+    function displayDataset(d, invisible) {
+        if (d.mapbox) {
+            showMapboxDataset(map, d, invisible);
+            if (!invisible) {
+                showCaption(d.name, undefined, d.caption);
+            }
+        } else {
+            d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  invisible);
+            d.mapvis.setVisColumn(d.column);
+            d.layerId = d.mapvis.layerId;
+            if (!invisible) {
+                showCaption(d.dataset.name, d.dataset.dataId, d.caption);
+            }
+        }
     }
+
+    _datasetNo = datasetNo;
+    let d = datasets[datasetNo], 
+        nextD = datasets[(datasetNo + 1) % datasets.length];
+        //mapvis;
+
+    if (d.layerId) {
+        // layer is pre-loaded
+        // TODO change 0.9 to something specific for each type
+        map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), 0.9);
+        if (d.mapbox) { // TODO remove this repetition
+            showCaption(d.name, undefined, d.caption);
+        } else {
+            showCaption(d.dataset.name, d.dataset.dataId, d.caption);
+        }
+        //mapvis = d.mapvis; 
+    } else 
+        displayDataset(d, false);
+
+    // load, but don't show, next one. // Comment out the next line to not do the pre-loading thing.
+    displayDataset(nextD, true);
+
+    if (d.showLegend) {
+        document.querySelector('#legends').style.display = 'block';
+    } else {
+        document.querySelector('#legends').style.display = 'none';
+    }
+
     // We're aiming to arrive at the viewpoint 1/3 of the way through the dataset's appearance
     // and leave 2/3 of the way through.
     if (d.flyTo && !map.isMoving()) {
@@ -190,25 +269,39 @@ function nextDataset(map, datasetNo) {
     }
 
     setTimeout(() => {
-        if (mapvis)
-            mapvis.remove();
+        if (d.mapvis)
+            d.mapvis.remove();
         
         if (d.mapbox)
             map.removeLayer(d.mapbox.id);
 
+        
+    }, d.delay + 0); /*def(d.linger, 1000)); */// let it linger a bit while the next one is loading.
+    setTimeout(() => {
         nextDataset(map, (datasetNo + 1) % datasets.length);
     }, d.delay );
 }
 
 /* Pre download all datasets in the loop */
-function loadDatasets() {
+function loadDatasets(map) {
     return Promise
-        .all(datasets.map(d => d.dataset ? d.dataset.load() : Promise.resolve ()))
-        .then(() => datasets[0].dataset);
+        .all(datasets.map(d => { 
+            if (d.dataset)
+                return d.dataset.load();
+            else
+                return Promise.resolve();
+                // style isn't done loading so we can't add sources. not sure it will actually trigger downloading anyway.
+                //return Promise.resolve (addMapboxDataset(map, d));
+        })).then(() => datasets[0].dataset);
 }
 
 function loadOneDataset() {
-    return new SourceData(chooseDataset()).load();
+    let dataset = chooseDataset();
+    return new SourceData(dataset).load();
+    /*if (dataset.match(/....-..../))
+        
+    else
+        return Promise.resolve(true);*/
 }
 
 (function start() {
@@ -221,14 +314,15 @@ function loadOneDataset() {
 
     let map = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/dark-v9',
+        //style: 'mapbox://styles/mapbox/dark-v9',
+        style: 'mapbox://styles/cityofmelbourne/ciz983lqo001w2ss2eou49eos?fresh=2',
         center: [144.95, -37.813],
         zoom: 15,//13
         pitch: 45, // TODO revert for flat
         attributionControl: false
     });
     map.addControl(new mapboxgl.AttributionControl(), 'top-left');
-    map.once('load', () => tweakBasemap(map));
+    //map.once('load', () => tweakBasemap(map));
     map.on('moveend', e=> {
         console.log({
             center: map.getCenter(),
@@ -238,7 +332,7 @@ function loadOneDataset() {
         });
     });
 
-    (demoMode ? loadDatasets() : loadOneDataset())
+    (demoMode ? loadDatasets(map) : loadOneDataset())
     .then(dataset => {
         
         if (dataset) 
@@ -246,9 +340,14 @@ function loadOneDataset() {
 
         whenMapLoaded(map, () => {
             if (demoMode) {
-                nextDataset(map, 5);
+                nextDataset(map, 10);
             } else {
                 showDataset(map, dataset);
+                // would be nice to support loading mapbox datasets but
+                // it's a faff to guess how to style it
+                //if (dataset.match(/....-..../))
+                //else
+
             }
             document.querySelectorAll('#loading')[0].outerHTML='';
 

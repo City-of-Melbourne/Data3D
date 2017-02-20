@@ -13,16 +13,31 @@ sourceData is an object with:
 - shape
 - mins, maxs
 */
+const def = (a, b) => a !== undefined ? a : b;
+
+let unique = 0;
+
 export class MapVis {
-    constructor(map, sourceData, filter, featureHoverHook) {
+    constructor(map, sourceData, filter, featureHoverHook, options) {
         this.map = map;
         this.sourceData = sourceData;
         this.filter = filter;
         this.featureHoverHook = featureHoverHook; // f(properties, sourceData)
-        
+        options = def(options, {});
+        this.options = {
+            circleRadius: def(options.circleRadius, 10),
+            invisible: options.invisible, // whether to create with opacity 0
+            symbol: options.symbol // Mapbox symbol properties, meaning we show symbol instead of circle
+        };
+
+        //this.options.invisible = false;
         // TODO should be passed a Legend object of some kind.
 
         this.dataColumn = undefined;
+
+        this.layerId = sourceData.shape + '-' + sourceData.dataId + '-' + (unique++);
+        this.layerIdHighlight = this.layerId + '-highlight';
+
 
         
         // Convert a table of rows to a Mapbox datasource
@@ -30,8 +45,18 @@ export class MapVis {
             let sourceId = 'dataset-' + this.sourceData.dataId;
             if (!this.map.getSource(sourceId))        
                 this.map.addSource(sourceId, pointDatasetToGeoJSON(this.sourceData) );
-            this.map.addLayer(pointLayer(sourceId, this.filter));
-            this.map.addLayer(pointLayer(sourceId, ['==', this.sourceData.locationColumn, '-'], true)); // highlight layer
+
+            if (!this.options.symbol) {
+                this.map.addLayer(circleLayer(sourceId, this.layerId, this.filter, false, this.options.invisible));
+                if (this.featureHoverHook)
+                    this.map.addLayer(circleLayer(sourceId, this.layerIdHighlight, ['==', this.sourceData.locationColumn, '-'], true, this.options.invisible)); // highlight layer
+            } else {
+                this.map.addLayer(symbolLayer(sourceId, this.layerId, this.options.symbol, this.filter, false, this.options.invisible));
+                if (this.featureHoverHook)
+                    // try using a circle highlight even on an icon
+                    this.map.addLayer(circleLayer(sourceId, this.layerIdHighlight, ['==', this.sourceData.locationColumn, '-'], true, this.options.invisible)); // highlight layer
+                    //this.map.addLayer(symbolLayer(sourceId, this.layerIdHighlight, this.options.symbol, ['==', this.sourceData.locationColumn, '-'], true)); // highlight layer
+            }
         };
 
         
@@ -47,8 +72,10 @@ export class MapVis {
                     type: 'vector', 
                     url: 'mapbox://opencouncildata.aedfmyp8'
                 });
-            this.map.addLayer(polygonHighlightLayer(sourceId));
-            this.map.addLayer(polygonLayer(sourceId));
+            if (this.featureHoverHook) {
+                this.map.addLayer(polygonHighlightLayer(sourceId, this.layerIdHighlight, this.options.invisible));
+            }
+            this.map.addLayer(polygonLayer(sourceId, this.layerId, this.options.invisible));
             
         };
 
@@ -57,6 +84,10 @@ export class MapVis {
     
         // switch visualisation to using this column
         this.setVisColumn = function(columnName) {
+            if (this.symbol) {
+                console.log('This is a symbol layer, we ignore setVisColumn.');
+                return;
+            }
             if (columnName === undefined) {
                 columnName = sourceData.textColumns[0];
             }
@@ -78,13 +109,16 @@ export class MapVis {
         };
 
         this.setCircleRadiusStyle = function(dataColumn) {
-            this.map.setPaintProperty('points', 'circle-radius', {
+            let minSize = 0.3 * this.options.circleRadius;
+            let maxSize = this.options.circleRadius;
+
+            this.map.setPaintProperty(this.layerId, 'circle-radius', {
                 property: dataColumn,
                 stops: [
                     [{ zoom: 10, value: sourceData.mins[dataColumn]}, 1],
                     [{ zoom: 10, value: sourceData.maxs[dataColumn]}, 3],
-                    [{ zoom: 17, value: sourceData.mins[dataColumn]}, 3],
-                    [{ zoom: 17, value: sourceData.maxs[dataColumn]}, 10]
+                    [{ zoom: 17, value: sourceData.mins[dataColumn]}, minSize],
+                    [{ zoom: 17, value: sourceData.maxs[dataColumn]}, maxSize]
                 ]
             });
 
@@ -93,7 +127,7 @@ export class MapVis {
 
         this.removeCircleRadius = function(e) {
             console.log(pointLayer().paint['circle-radius']);
-            this.map.setPaintProperty('points','circle-radius', pointLayer().paint['circle-radius']);
+            this.map.setPaintProperty(this.layerId,'circle-radius', pointLayer().paint['circle-radius']);
             document.querySelector('#legend-numeric').innerHTML = '';
         };
 
@@ -102,7 +136,7 @@ export class MapVis {
             const enumColors = ['#1f78b4','#fb9a99','#b2df8a','#33a02c','#e31a1c','#fdbf6f','#a6cee3', '#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'];
 
             let enumStops = this.sourceData.sortedFrequencies[dataColumn].map((val,i) => [val, enumColors[i]]);
-            this.map.setPaintProperty('points', 'circle-color', {
+            this.map.setPaintProperty(this.layerId, 'circle-color', {
                 property: dataColumn,
                 type: 'categorical',
                 stops: enumStops
@@ -112,7 +146,7 @@ export class MapVis {
         };
 
         this.removeCircleColor = function(e) {
-            this.map.setPaintProperty('points','circle-color', pointLayer().paint['circle-color']);
+            this.map.setPaintProperty(this.layerId,'circle-color', pointLayer().paint['circle-color']);
             document.querySelector('#legend-enum').innerHTML = '';
         };
         /*
@@ -120,21 +154,21 @@ export class MapVis {
             TODO: add removePolygonHeight
         */
         this.setPolygonHeightStyle = function(dataColumn) {
-            this.map.setPaintProperty('polygons', 'fill-extrusion-height',  {
+            this.map.setPaintProperty(this.layerId, 'fill-extrusion-height',  {
                 // remember, the data doesn't exist in the polygon set, it's just a huge value lookup
                 property: 'block_id',//locationColumn, // the ID on the actual geometry dataset
                 type: 'categorical',
                 stops: this.sourceData.filteredRows()                
                     .map(row => [row[this.sourceData.locationColumn], row[dataColumn] / this.sourceData.maxs[dataColumn] * 1000])
             });
-            this.map.setPaintProperty('polygons', 'fill-extrusion-color', {
+            this.map.setPaintProperty(this.layerId, 'fill-extrusion-color', {
                 property: 'block_id',
                 type: 'categorical',
                 stops: this.sourceData.filteredRows()
                     //.map(row => [row[this.sourceData.locationColumn], 'rgb(0,0,' + Math.round(40 + row[dataColumn] / this.sourceData.maxs[dataColumn] * 200) + ')'])
                     .map(row => [row[this.sourceData.locationColumn], 'hsl(340,88%,' + Math.round(20 + row[dataColumn] / this.sourceData.maxs[dataColumn] * 50) + '%)'])
             });
-            this.map.setFilter('polygons', ['!in', 'block_id', ...(/* ### TODO generalise */ 
+            this.map.setFilter(this.layerId, ['!in', 'block_id', ...(/* ### TODO generalise */ 
                 this.sourceData.filteredRows()
                 .filter(row => row[dataColumn] === 0)
                 .map(row => row[this.sourceData.locationColumn]))]);
@@ -145,41 +179,35 @@ export class MapVis {
         this.lastFeature = undefined;
 
         this.remove = function() {
-            // TODO ideally we'd be careful to only remove layers we created
-            this.map.removeLayer(this.sourceData.shape + 's');
-            this.map.removeLayer(this.sourceData.shape + 's-highlight');
-            /*if (map.getLayer('polygons')) {
-                map.removeLayer('polygons');
-                map.removeLayer('polygons-highlight');
+            this.map.removeLayer(this.layerId);
+            if (this.mousemove) {
+                this.map.removeLayer(this.layerIdHighlight);
+                this.map.off('mousemove', this.mousemove);
+                thouse.mousemove = undefined;
             }
-            if (map.getLayer('points')) {
-                map.removeLayer('points');
-                map.removeLayer('points-highlight');
-            }*/
-            this.map.off('mousemove', this.mousemove);
         };
+        if (featureHoverHook) {
+            this.mousemove = (e => {
+                var f = this.map.queryRenderedFeatures(e.point, { layers: [this.layerId]})[0];  
+                if (f && f !== this.lastFeature) {
+                    this.map.getCanvas().style.cursor = 'pointer';
 
-        this.mousemove = (e => {
-            var f = this.map.queryRenderedFeatures(e.point, { layers: [this.sourceData.shape + 's']})[0];  /* yes, that's gross */
-            if (f && f !== this.lastFeature) {
-                this.map.getCanvas().style.cursor = 'pointer';
-
-                this.lastFeature = f;
-                if (featureHoverHook) {
-                    featureHoverHook(f.properties, this.sourceData, this);
-                }
-                
-                if (sourceData.shape === 'point') {
-                    this.map.setFilter('points-highlight', ['==', this.sourceData.locationColumn, f.properties[this.sourceData.locationColumn]]); // we don't have any other reliable key?
+                    this.lastFeature = f;
+                    if (featureHoverHook) {
+                        featureHoverHook(f.properties, this.sourceData, this);
+                    }
+                    
+                    if (sourceData.shape === 'point') {
+                        this.map.setFilter(this.layerIdHighlight, ['==', this.sourceData.locationColumn, f.properties[this.sourceData.locationColumn]]); // we don't have any other reliable key?
+                    } else {
+                        this.map.setFilter(this.layerIdHighlight, ['==', 'block_id', f.properties.block_id]); // don't have a general way to match other kinds of polygons
+                        //console.log(f.properties);
+                    }
                 } else {
-                    this.map.setFilter('polygons-highlight', ['==', 'block_id', f.properties.block_id]); // don't have a general way to match other kinds of polygons
-                    //console.log(f.properties);
+                    this.map.getCanvas().style.cursor = '';
                 }
-            } else {
-                this.map.getCanvas().style.cursor = '';
-            }
-        }).bind(this);
-
+            }).bind(this);
+        }
         // The actual constructor...
         if (this.sourceData.shape === 'point') {
             this.addPointsToMap();
@@ -224,15 +252,15 @@ function pointDatasetToGeoJSON(sourceData) {
     return datasource;
 };
 
-function pointLayer(sourceId, filter, highlight) {
+function circleLayer(sourceId, layerId, filter, highlight, invisible) {
     let ret = {
-        id: 'points' + (highlight ? '-highlight': ''),
+        id: layerId,
         type: 'circle',
         source: sourceId,
         paint: {
 //            'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
             'circle-color': highlight ? 'rgba(0,0,0,0)' : 'hsl(220,80%,50%)',
-            'circle-opacity': 0.95,
+            'circle-opacity': !invisible ? 0.95 : 0,
             'circle-stroke-color': highlight ? 'white' : 'rgba(50,50,50,0.5)',
             'circle-stroke-width': 1,
             'circle-radius': {
@@ -245,23 +273,39 @@ function pointLayer(sourceId, filter, highlight) {
     return ret;
 }
 
+function symbolLayer(sourceId, layerId, symbol, filter, highlight, invisible) {
+    let ret = {
+        id: layerId,
+        type: 'symbol',
+        source: sourceId
+    };
+    if (filter)
+        ret.filter = filter;
+    ret.paint = def(symbol.paint, {});
+    ret.paint['icon-opacity'] = !invisible ? 0.95 : 0;
+    if (symbol.layout)
+        ret.layout = symbol.layout;
 
- function polygonLayer(sourceId) {
+    return ret;
+}
+
+
+ function polygonLayer(sourceId, layerId, invisible) {
     return {
-        id: 'polygons',
+        id: layerId,
         type: 'fill-extrusion',
         source: sourceId,
         'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
         paint: { 
-             'fill-extrusion-opacity': 0.8,
+             'fill-extrusion-opacity': !invisible ? 0.8 : 0,
              'fill-extrusion-height': 0,
              'fill-extrusion-color': '#003'
          },
     };
 }
- function polygonHighlightLayer(sourceId) {
+ function polygonHighlightLayer(sourceId, layerId) {
     return {
-        id: 'polygons-highlight',
+        id: layerId,
         type: 'fill',
         source: sourceId,
         'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
@@ -271,3 +315,4 @@ function pointLayer(sourceId, filter, highlight) {
         filter: ['==', 'block_id', '-']
     };
 }
+
