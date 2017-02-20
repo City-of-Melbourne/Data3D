@@ -34,7 +34,7 @@
 */
 @font-face {
   font-family: "Gotham";
-  src: url("../fonts/Gotham-Bold.otf") format("opentype"); }
+  src: url("../fonts/Gotham-Medium.otf") format("opentype"); }
 
 @font-face {
   font-family: "GothamThin";
@@ -494,8 +494,12 @@ body {
 
 #caption, #footer {
   position: relative;
-  width: 800px;
+  width: 100%;
   margin: 0 auto; }
+
+#caption h1 {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.5em 0.5em; }
 
 #footer {
   position: absolute;
@@ -533,12 +537,20 @@ body {
   /*font-size:1rem;
     line-height:1.5rem;
     text-align:center;*/
+  letter-spacing: 1.5px;
+  line-height: 37px;
   font-weight: bold;
   color: #eee; }
 
 #caption h1 {
-  -webkit-text-stroke: 1px black;
-  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000,   1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+  /* -webkit-text-stroke: 1px black;
+    text-shadow:
+       1px 1px 0 #000,
+     -1px -1px 0 #000,  
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+       1px 1px 0 #000;
+    */ }
 
 #logo {
   background-image: url(../images/com-masterlogo.svg);
