@@ -64,7 +64,15 @@ export const datasets = [
 
             }
         },
-        flyTo: {"center":{"lng":144.98492251438307,"lat":-37.80310972727281},"zoom":15.358509789790808,"bearing":-78.3999999999997,"pitch":58.500000000000014}
+        flyTo: {"center":{"lng":144.97473730944466,"lat":-37.8049071559513},"zoom":15.348676099922852,"bearing":-154.4971333289701,"pitch":60}
+        //flyTo: {"center":{"lng":144.98492251438307,"lat":-37.80310972727281},"zoom":15.358509789790808,"bearing":-78.3999999999997,"pitch":58.500000000000014}
+    },
+    {
+        delay:10000,
+        caption: 'Pedestrian sensors count foot traffic every hour',
+        name: 'Pedestrian sensor locations',
+        dataset: new SourceData('ygaw-6rzq'),
+        flyTo: {"center":{"lng":144.96367854761945,"lat":-37.80236896106898},"zoom":15.389393850725732,"bearing":-143.5844675124954,"pitch":60}                                
     },
 
     {
@@ -84,7 +92,8 @@ export const datasets = [
             },
 
         },
-        flyTo: {"center":{"lng":144.94318163755105,"lat":-37.78351953419449},"zoom":15.773488574721082,"bearing":147.65219382373107,"pitch":59.99589825769096}
+        flyTo: {"center":{"lng":144.95767415418266,"lat":-37.791686619772975},"zoom":15.487337457356691,"bearing":-122.40000000000009,"pitch":60}
+        //flyTo: {"center":{"lng":144.94318163755105,"lat":-37.78351953419449},"zoom":15.773488574721082,"bearing":147.65219382373107,"pitch":59.99589825769096}
     },
     {
         delay: 5000,
@@ -170,23 +179,23 @@ export const datasets = [
     },
 
     { 
-        delay: 10000, 
-        linger:10000,
+        delay: 7000, 
+        linger:9000,
         dataset: new SourceData('gh7s-qda8'), 
         column: 'status', 
         filter: [ '==', 'status', 'APPLIED' ], 
-        caption: 'Development Activity Monitor tracks major projects in the planning stage',
+        caption: 'Development Activity Monitor tracks major projects in the planning stage...',
         flyTo: {"center":{"lng":144.96354379775335,"lat":-37.82595306646476},"zoom":14.665437375740426,"bearing":0,"pitch":59.5}
 
     }, 
 
     { 
-        delay: 5000,
+        delay: 4000,
         linger:5000, 
         dataset: new SourceData('gh7s-qda8'), 
         column: 'status', 
         filter: [ '==', 'status', 'UNDER CONSTRUCTION' ], 
-        caption: '...under construction',
+        caption: '...projects under construction',
         flyTo: {"center":{"lng":144.96354379775335,"lat":-37.82595306646476},"zoom":14.665437375740426,"bearing":0,"pitch":59.5}
 
     }, 
@@ -250,7 +259,7 @@ export const datasets = [
     { 
         delay:10000,
         name: 'Property boundaries',
-        caption: 'And property boundary',
+        caption: 'And every property boundary',
         // need to zoom in close on this one
         mapbox: {
             id: 'boundaries',
@@ -278,6 +287,19 @@ export const datasets = [
         dataset: new SourceData('tdvh-n9dv') ,
         flyTo: {"center":{"lng":144.97768414562887,"lat":-37.81998948372839},"zoom":14.670221676238507,"bearing":-57.93230251736117,"pitch":60}
     }, // bike share
+    {
+        dataset: new SourceData('84bf-dihi'),
+        caption: 'Places you can book for a wedding...',
+        filter: ['==', 'WEDDING', 'Y'],
+        delay: 5000,
+        flyTo: {"center":{"lng":144.9736255669336,"lat":-37.81396271334432},"zoom":14.405591091671058,"bearing":-67.19999999999999,"pitch":54.00000000000002}
+    },
+    {
+        dataset: new SourceData('84bf-dihi'),
+        caption: 'Places you can book for a wedding...or something else.',
+        delay: 5000,
+        flyTo: {"center":{"lng":144.9736255669336,"lat":-37.81396271334432},"zoom":14.405591091671058,"bearing":-67.19999999999999,"pitch":54.00000000000002}
+    },
     {
         delay:10000,
         caption: 'The skyline of our city',

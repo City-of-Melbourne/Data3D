@@ -276,7 +276,7 @@ function nextDataset(map, datasetNo) {
             map.removeLayer(d.mapbox.id);
 
         
-    }, d.delay + 0); /*def(d.linger, 1000)); */// let it linger a bit while the next one is loading.
+    }, d.delay + def(d.linger, 0)); // let it linger a bit while the next one is loading.
     setTimeout(() => {
         nextDataset(map, (datasetNo + 1) % datasets.length);
     }, d.delay );
@@ -340,7 +340,7 @@ function loadOneDataset() {
 
         whenMapLoaded(map, () => {
             if (demoMode) {
-                nextDataset(map, 10);
+                nextDataset(map, 0);
             } else {
                 showDataset(map, dataset);
                 // would be nice to support loading mapbox datasets but
