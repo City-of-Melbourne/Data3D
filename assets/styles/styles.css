@@ -561,7 +561,11 @@ body {
   right: 40px;
   background-size: cover; }
 
-@media only screen and (max-width: 768px) {
+/*
+For very small screens. This isn't a real target for this app, but useful for demos.
+Mostly, just trying to move the overlays out of the way.
+*/
+@media only screen and (max-width: 768px), only screen and (max-height: 768px) {
   #caption {
     top: 0;
     padding: 0; }
@@ -577,6 +581,9 @@ body {
     height: calc(0.75 * 40px); }
   #footer .url {
     font-size: 20px; }
+  #footer .dataset {
+    font-size: 12px;
+    line-height: 12px; }
   #footer .dataset, #footer .url {
     max-width: 60vw;
     margin-left: 4px; } }
