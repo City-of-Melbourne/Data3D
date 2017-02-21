@@ -186,6 +186,12 @@ export class MapVis {
                 thouse.mousemove = undefined;
             }
         };
+        // The actual constructor...
+        if (this.sourceData.shape === 'point') {
+            this.addPointsToMap();
+        } else {
+            this.addPolygonsToMap();
+        }
         if (featureHoverHook) {
             this.mousemove = (e => {
                 var f = this.map.queryRenderedFeatures(e.point, { layers: [this.layerId]})[0];  
@@ -207,14 +213,9 @@ export class MapVis {
                     this.map.getCanvas().style.cursor = '';
                 }
             }).bind(this);
+            this.map.on('mousemove', this.mousemove);
         }
-        // The actual constructor...
-        if (this.sourceData.shape === 'point') {
-            this.addPointsToMap();
-        } else {
-            this.addPolygonsToMap();
-        }
-        this.map.on('mousemove', this.mousemove);
+        
 
 
 
@@ -281,8 +282,11 @@ function symbolLayer(sourceId, layerId, symbol, filter, highlight, invisible) {
     };
     if (filter)
         ret.filter = filter;
+
     ret.paint = def(symbol.paint, {});
     ret.paint['icon-opacity'] = !invisible ? 0.95 : 0;
+
+    //ret.layout = def(symbol.layout, {});
     if (symbol.layout)
         ret.layout = symbol.layout;
 

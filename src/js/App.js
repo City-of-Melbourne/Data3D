@@ -28,6 +28,7 @@ const opacityProp = {
             fill: 'fill-opacity',
             circle: 'circle-opacity',
             symbol: 'icon-opacity',
+            'line': 'line-opacity',
             'fill-extrusion': 'fill-extrusion-opacity'
         };
 
@@ -119,12 +120,13 @@ function chooseDataset() {
         ];
 
     document.querySelectorAll('#caption h1')[0].innerHTML = 'Loading random dataset...';
-    
-    return 'c3gt-hrz6';
+    return pointChoices[Math.round(Math.random() * pointChoices.length)];
+    //return 'c3gt-hrz6';
 }
 
 function showCaption(name, dataId, caption) {
-    document.querySelector('#caption h1').innerHTML = /*(_datasetNo || '') + */(caption || name || '');
+    let includeNo = false;
+    document.querySelector('#caption h1').innerHTML = (includeNo ? (_datasetNo || ''):'') + (caption || name || '');
     document.querySelector('#footer .dataset').innerHTML = name || '';
     
     // TODO reinstate for non-demo mode.
@@ -163,7 +165,7 @@ function showDataset(map, dataset, filter, caption, noFeatureInfo, options, invi
     if (invisible) {
         options.invisible = true;
     } else {
-        showCaption(dataset.name, dataset.dataId, caption);
+        //showCaption(dataset.name, dataset.dataId, caption);
     }
 
     let mapvis = new MapVis(map, dataset, filter, !noFeatureInfo? showFeatureTable : null, options);
@@ -195,58 +197,57 @@ function showMapboxDataset(map, dataset, invisible) {
         }
         map.addLayer(style);
     } else {
-        map.setPaintProperty(dataset.mapbox.id, getOpacityProp(style), 0.9); // TODO set right opacity
+        map.setPaintProperty(dataset.mapbox.id, getOpacityProp(style), def(dataset.opacity,0.9)); // TODO set right opacity
     }
+    dataset.layerId = dataset.mapbox.id;
 
-    if (!invisible) 
-        showCaption(dataset.name, dataset.dataId, dataset.caption);
+    //if (!invisible) 
+        // surely this is an error - mapbox datasets don't have 'dataId'
+        //showCaption(dataset.name, dataset.dataId, dataset.caption);
 }
 
 let _datasetNo='';
-/* Advance and display the next dataset in our loop */
-    /*
-        Pre-load datasets by:
-        - calling the load/display code for the next dataset now, but with opacity 0
-        - keeping track of the layer ID
-        - if it's present when the dataset gets "shown", 
-    */
+/* Advance and display the next dataset in our loop 
+Each dataset is pre-loaded by being "shown" invisible (opacity 0), then "revealed" at the right time.
+
+    // TODO clean this up so relationship between "now" and "next" is clearer, no repetition.
+
+*/
 function nextDataset(map, datasetNo) {
-    function displayDataset(d, invisible) {
+    function reveal(d) {
+        // TODO change 0.9 to something specific for each type
+        map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), def(d.opacity, 0.9));
         if (d.mapbox) {
-            showMapboxDataset(map, d, invisible);
-            if (!invisible) {
-                showCaption(d.name, undefined, d.caption);
-            }
+            showCaption(d.name, undefined, d.caption);
         } else {
-            d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  invisible);
+            showCaption(d.dataset.name, d.dataset.dataId, d.caption);
+        }
+    }
+    function preloadDataset(d) {
+        if (d.mapbox) {
+            showMapboxDataset(map, d, true);
+        } else {
+            d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  true);
             d.mapvis.setVisColumn(d.column);
             d.layerId = d.mapvis.layerId;
-            if (!invisible) {
-                showCaption(d.dataset.name, d.dataset.dataId, d.caption);
-            }
         }
+    }
+    function showDatasetCaption(d) {
     }
 
     _datasetNo = datasetNo;
     let d = datasets[datasetNo], 
         nextD = datasets[(datasetNo + 1) % datasets.length];
-        //mapvis;
 
-    if (d.layerId) {
-        // layer is pre-loaded
-        // TODO change 0.9 to something specific for each type
-        map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), 0.9);
-        if (d.mapbox) { // TODO remove this repetition
-            showCaption(d.name, undefined, d.caption);
-        } else {
-            showCaption(d.dataset.name, d.dataset.dataId, d.caption);
-        }
-        //mapvis = d.mapvis; 
-    } else 
-        displayDataset(d, false);
+
+    if (!d.layerId || map.getLayer(d.layerid) /* this second test shouldn't be needed...*/) {
+        preloadDataset(d);
+    }
+    reveal(d);
+        
 
     // load, but don't show, next one. // Comment out the next line to not do the pre-loading thing.
-    displayDataset(nextD, true);
+    preloadDataset(nextD);
 
     if (d.showLegend) {
         document.querySelector('#legends').style.display = 'block';
@@ -262,7 +263,8 @@ function nextDataset(map, datasetNo) {
     }
     
     if (nextD.flyTo) {
-        nextD.flyTo.duration = d.delay/3.0 + nextD.delay/3.0;// so it lands about a third of the way through the dataset's visibility.
+        // got to be careful if the data overrides this,
+        nextD.flyTo.duration = def(nextD.flyTo.duration, d.delay/3.0 + nextD.delay/3.0);// so it lands about a third of the way through the dataset's visibility.
         setTimeout(() => {
             map.flyTo(nextD.flyTo);
         }, d.delay * 2.0/3.0);
@@ -276,7 +278,7 @@ function nextDataset(map, datasetNo) {
             map.removeLayer(d.mapbox.id);
 
         
-    }, d.delay + def(d.linger, 0)); // let it linger a bit while the next one is loading.
+    }, d.delay + def(d.linger, 0)); // optional "linger" time allows overlap. Not generally needed since we implemented preloading.
     setTimeout(() => {
         nextDataset(map, (datasetNo + 1) % datasets.length);
     }, d.delay );
@@ -305,6 +307,13 @@ function loadOneDataset() {
 }
 
 (function start() {
+    
+    try {
+        document.documentElement.requestFullscreen();
+    } catch (e) {
+    }
+
+
     let demoMode = window.location.hash === '#demo';
     if (demoMode) {
         // if we did this after the map was loading, call map.resize();
@@ -315,13 +324,13 @@ function loadOneDataset() {
     let map = new mapboxgl.Map({
         container: 'map',
         //style: 'mapbox://styles/mapbox/dark-v9',
-        style: 'mapbox://styles/cityofmelbourne/ciz983lqo001w2ss2eou49eos?fresh=2',
+        style: 'mapbox://styles/cityofmelbourne/ciz983lqo001w2ss2eou49eos?fresh=5',
         center: [144.95, -37.813],
-        zoom: 15,//13
+        zoom: 13,//13
         pitch: 45, // TODO revert for flat
         attributionControl: false
     });
-    map.addControl(new mapboxgl.AttributionControl(), 'top-left');
+    map.addControl(new mapboxgl.AttributionControl(), 'top-right');
     //map.once('load', () => tweakBasemap(map));
     map.on('moveend', e=> {
         console.log({
@@ -331,14 +340,18 @@ function loadOneDataset() {
             pitch: map.getPitch()
         });
     });
+    map.on('error', e => {
+        //console.error(e);
+    });
 
     (demoMode ? loadDatasets(map) : loadOneDataset())
     .then(dataset => {
-        
+        window.scrollTo(0,1); // does this hide the address bar? Nope    
         if (dataset) 
             showCaption(dataset.name, dataset.dataId);
 
         whenMapLoaded(map, () => {
+
             if (demoMode) {
                 nextDataset(map, 0);
             } else {

@@ -138,6 +138,7 @@ $captionwidth: 800px;
 
 }
 
+
 #logo {
     background-image:url(../images/com-masterlogo.svg);
     width: 140px;
@@ -147,6 +148,49 @@ $captionwidth: 800px;
     right: 40px;
     background-size:cover;
 }
+
+/*
+For very small screens. This isn't a real target for this app, but useful for demos.
+Mostly, just trying to move the overlays out of the way.
+*/
+@media only screen and (max-width: 768px), only screen and (max-height: 768px){
+    #caption {
+        top: 0;
+        padding:0;
+    }
+    #caption h1 {
+        font-size: 20px;
+        line-height:20px;
+    }
+    #footer {
+        bottom: 4px;
+        // left: 0;
+         // margin-left:0;
+         // padding-left:0;
+    }
+    #logo {
+        right:12px;
+        bottom:12px;
+        width: calc(0.75 * 140px);
+        height: calc(0.75 * 40px);
+    }
+
+    #footer .url {
+        font-size: 20px;
+    }
+    #footer .dataset {
+        font-size: 12px;
+        line-height:12px;
+    }
+
+    #footer .dataset, #footer .url {
+        max-width: 60vw;
+        margin-left:4px;
+    }
+
+
+}
+
 
 #source {
     font-size:0.75em;
