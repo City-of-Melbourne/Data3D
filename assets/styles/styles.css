@@ -552,6 +552,19 @@ body {
        1px 1px 0 #000;
     */ }
 
+@media only screen and (max-width: 768px) {
+  #caption {
+    top: 0; }
+  #caption h1 {
+    font-size: 20px;
+    line-height: 20px; }
+  #footer {
+    bottom: 4px; }
+  #logo {
+    padding-right: 0; }
+  #footer .dataset {
+    max-width: 60vw; } }
+
 #logo {
   background-image: url(../images/com-masterlogo.svg);
   width: 140px;
