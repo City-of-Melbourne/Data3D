@@ -552,6 +552,15 @@ body {
        1px 1px 0 #000;
     */ }
 
+#logo {
+  background-image: url(../images/com-masterlogo.svg);
+  width: 140px;
+  height: 40px;
+  position: absolute;
+  bottom: 32px;
+  right: 40px;
+  background-size: cover; }
+
 @media only screen and (max-width: 768px) {
   #caption {
     top: 0; }
@@ -561,18 +570,9 @@ body {
   #footer {
     bottom: 4px; }
   #logo {
-    padding-right: 0; }
+    right: 4px; }
   #footer .dataset {
     max-width: 60vw; } }
-
-#logo {
-  background-image: url(../images/com-masterlogo.svg);
-  width: 140px;
-  height: 40px;
-  position: absolute;
-  bottom: 32px;
-  right: 40px;
-  background-size: cover; }
 
 #source {
   font-size: 0.75em; }
