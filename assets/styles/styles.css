@@ -570,9 +570,15 @@ body {
   #footer {
     bottom: 4px; }
   #logo {
-    right: 4px; }
-  #footer .dataset {
-    max-width: 60vw; } }
+    right: 12px;
+    bottom: 12px;
+    width: calc(0.75 * 140px);
+    height: calc(0.75 * 40px); }
+  #footer .url {
+    font-size: 20px; }
+  #footer .dataset, #footer .url {
+    max-width: 60vw;
+    margin-left: 4px; } }
 
 #source {
   font-size: 0.75em; }
