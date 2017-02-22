@@ -84,8 +84,8 @@ export class MapVis {
     
         // switch visualisation to using this column
         this.setVisColumn = function(columnName) {
-            if (this.symbol) {
-                console.log('This is a symbol layer, we ignore setVisColumn.');
+            if (this.options.symbol) {
+                //console.log('This is a symbol layer, we ignore setVisColumn.');
                 return;
             }
             if (columnName === undefined) {

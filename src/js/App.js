@@ -119,7 +119,7 @@ function chooseDataset() {
         //bs7n-5veh, // business establishments. 100,000 rows, too fragile.
         ];
 
-    document.querySelectorAll('#caption h1')[0].innerHTML = 'Loading random dataset...';
+    document.querySelector('#caption h1').innerHTML = 'Loading random dataset...';
     return pointChoices[Math.round(Math.random() * pointChoices.length)];
     //return 'c3gt-hrz6';
 }
@@ -139,7 +139,7 @@ function showCaption(name, dataId, caption) {
     ['place-suburb', 'place-neighbourhood'].forEach(layerId => {
 
         //rgb(227, 4, 80); CoM pop magenta
-        //map.setPaintProperty(layerId, 'text-color', up ? 'rgb(227,4,80)' : 'hsl(0,0,30%)'); // CoM pop green
+        //map.setPaintProperty(layerId, 'text-color', up ? 'rgb(227,4,80)' : 'hsl(0,0,30%)'); // CoM pop magenta
         map.setPaintProperty(layerId, 'text-color', up ? 'rgb(0,183,79)' : 'hsl(0,0,30%)'); // CoM pop green
         
     });
@@ -225,6 +225,7 @@ Each dataset is pre-loaded by being "shown" invisible (opacity 0), then "reveale
 */
 function nextDataset(map, datasetNo) {
     function reveal(d) {
+        console.log('Reveal ' + (!!d.mapbox?'mapbox':'non-mapbox') + ' dataset: ' + d.caption);
         // TODO change 0.9 to something specific for each type
         if (d.mapbox || d.dataset) {
             map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), def(d.opacity, 0.9));
@@ -242,7 +243,9 @@ function nextDataset(map, datasetNo) {
         }
     }
     function preloadDataset(d) {
+        console.log('Preload ' + (!!d.mapbox?'mapbox':'non-mapbox') + ' dataset: ' + d.caption);
         if (d.mapbox) {
+
             showMapboxDataset(map, d, true);
         } else if (d.dataset) {
             d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  true);
@@ -256,7 +259,7 @@ function nextDataset(map, datasetNo) {
         nextD = datasets[(datasetNo + 1) % datasets.length];
 
 
-    if (!d.layerId || map.getLayer(d.layerid) /* this second test shouldn't be needed...*/) {
+    if (!d.layerId || !map.getLayer(d.layerId) /* this second test shouldn't be needed...*/) {
         preloadDataset(d);
     }
     reveal(d);
@@ -275,14 +278,14 @@ function nextDataset(map, datasetNo) {
     // and leave 2/3 of the way through.
     if (d.flyTo && !map.isMoving()) {
         d.flyTo.duration = d.delay/3;// so it lands about a third of the way through the dataset's visibility.
-        map.flyTo(d.flyTo);
+        map.flyTo(d.flyTo, { source: 'nextDataset'});
     }
     
-    if (nextD.flyTo) {
+    if (nextD.flyTo && !window.stopped) {
         // got to be careful if the data overrides this,
         nextD.flyTo.duration = def(nextD.flyTo.duration, d.delay/3.0 + nextD.delay/3.0);// so it lands about a third of the way through the dataset's visibility.
         setTimeout(() => {
-            map.flyTo(nextD.flyTo);
+            map.flyTo(nextD.flyTo, { source: 'nextDataset'});
         }, d.delay * 2.0/3.0);
     }
 
@@ -302,9 +305,11 @@ function nextDataset(map, datasetNo) {
         
     }, d.delay + def(d.linger, 0)); // optional "linger" time allows overlap. Not generally needed since we implemented preloading.
     
-    setTimeout(() => {
-        nextDataset(map, (datasetNo + 1) % datasets.length);
-    }, d.delay );
+    if (!window.stopped) {
+        setTimeout(() => {
+            nextDataset(map, (datasetNo + 1) % datasets.length);
+        }, d.delay );
+    }
 }
 
 /* Pre download all datasets in the loop */
@@ -357,7 +362,10 @@ function loadOneDataset() {
     //map.once('load', () => tweakBasemap(map));
     //map.once('load',() => tweakPlaceLabels(map,true));
     //setTimeout(()=>tweakPlaceLabels(map, false), 8000);
-    map.on('moveend', e=> {
+    map.on('moveend', (e,data)=> {
+        if (e.source === 'nextDataset')
+            return;
+
         console.log({
             center: map.getCenter(),
             zoom: map.getZoom(),
@@ -365,8 +373,16 @@ function loadOneDataset() {
             pitch: map.getPitch()
         });
     });
-    map.on('error', e => {
-        //console.error(e);
+    /*map.on('error', e => {
+        console.error(e);
+    });*/
+    document.querySelector('body').addEventListener('keydown', e=> {
+        //console.log(e.keyCode);
+        if (e.keyCode === 190 || e.keyCode === 188 && demoMode) {
+            map.stop();
+            window.stopped = true;
+            nextDataset(map, (_datasetNo + {190: 1, 188: -1}[e.keyCode]) % datasets.length);
+        }
     });
 
     (demoMode ? loadDatasets(map) : loadOneDataset())
@@ -378,7 +394,7 @@ function loadOneDataset() {
         whenMapLoaded(map, () => {
 
             if (demoMode) {
-                nextDataset(map, 0);
+                nextDataset(map, 22);
             } else {
                 showDataset(map, dataset);
                 // would be nice to support loading mapbox datasets but

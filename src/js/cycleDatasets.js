@@ -26,6 +26,11 @@ As you'd guess, we have a lot of data:
 
 
 /*
+Intro
+- Overview (suburb names highlighted)
+- Property boundaries
+- Street addresses
+
 Urban forest:
 - elms
 - gums
@@ -42,6 +47,21 @@ DAM
 - construction
 - completed
 
+Did you know:
+- community food
+- Garbage Collection Zones
+- Bookable Event Venues
+-- weddingable
+-- all
+- Toilets
+-- all 
+-- accessible
+- Cafes and Restaurants
+- Dog walking zones
+
+Finale:
+- Skyline
+- What can you do with our open data?
 
 
 Garbage Collection Zones
@@ -49,10 +69,6 @@ Dog Walking Zones off-leash
 Bike Share Stations
 Bookable Event Venues
 - weddingable
-- all
-Toilets
-- accessible
-- all 
 
 
 Grand finale "What can you do with our open data"?
@@ -132,44 +148,95 @@ import { SourceData } from './sourceData';
 
 export const datasets = [
     {
-        delay:6000,
+        delay:8000,
         caption:'This is Melbourne',
         paint: [
-            ['place-suburb', 'text-color', 'green'],
-            ['place-neighbourhood', 'text-color', 'green']
+            ['place-suburb', 'text-color', 'rgb(0,183,79)'],
+            ['place-neighbourhood', 'text-color', 'rgb(0,183,79)']
         ],
         name: ''
 
     },
-    {
-        delay:10000,
-        caption: 'Food services available free or low cost to our community',
-        name: 'Community food services with opening hours, public transport and parking options',
+    { 
+        delay:1000,
+        name: 'Property boundaries',
+        caption: 'We have data like property boundaries for planning',
         mapbox: {
-            id: 'food',
-            type: 'symbol',
-            source: 'mapbox://cityofmelbourne.7xvk0k3l',
-            'source-layer': 'Community_food_services_with_-a7cj9v',
+            id: 'boundaries-1',
+            type: 'line',
+            source: 'mapbox://cityofmelbourne.799drouh',
+            'source-layer': 'Property_boundaries-061k0x',
             paint: {
-                'text-color': 'hsl(30, 80%, 56%)' // bright orange
-                //'text-color': 'rgb(249, 243, 178)', // muted orange, a city for people
+                
+                'line-color': 'rgb(0,183,79)',
+                'line-width': {
+                    stops: [
+                        [13, 0.5],
+                        [16, 2]
+                    ]
+                }
+
+                
+            },
+        },
+        linger:1000, // just to avoid flash
+        flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:14,bearing:0,pitch:0, duration:10000},
+    },
+    // repeat - just to force the timing
+    { 
+        delay:10000,
+        linger:3000,
+        name: 'Property boundaries',
+        caption: 'We have data like property boundaries for planning',
+        mapbox: {
+            id: 'boundaries-2',
+            type: 'line',
+            source: 'mapbox://cityofmelbourne.799drouh',
+            'source-layer': 'Property_boundaries-061k0x',
+            paint: {
+                
+                'line-color': 'rgb(0,183,79)',
+                'line-width': {
+                    stops: [
+                        [13, 0.5],
+                        [16, 2]
+                    ]
+                }
+
+                
+            },
+        },
+        // just repeat previous view.
+        //flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:14,bearing:0,pitch:0, duration:10000},
+    },
+
+    { 
+        delay:14000,
+        name: 'Street addresses',
+        caption: 'As you\'d guess, we have data like every street address',
+        // need to zoom in close on this one
+        mapbox: {
+            id: 'addresses',
+            type: 'symbol',
+            source: 'mapbox://cityofmelbourne.3ip3couo',
+            'source-layer': 'Street_addresses-97e5on',
+            paint: {
+                
+                'text-color': 'rgb(0,183,79)',
+                
             },
             layout: {
-                'text-field': '{Name}',
-                'text-size': 12,
-
+                'text-field': '{street_no}',
+                'text-allow-overlap': true,
+                'text-size': 10,
             }
         },
-        flyTo: {"center":{"lng":144.97473730944466,"lat":-37.8049071559513},"zoom":15.348676099922852,"bearing":-154.4971333289701,"pitch":60}
-        //flyTo: {"center":{"lng":144.98492251438307,"lat":-37.80310972727281},"zoom":15.358509789790808,"bearing":-78.3999999999997,"pitch":58.500000000000014}
+        // near uni-ish
+        flyTo:{"center":{"lng":144.97001736426068,"lat":-37.79770798860123},"zoom":18,"bearing":-45.70203040506084,"pitch":48, duration:14000}
+        // roundabout of death lookng nw
+        //flyTo: {"center":{"lng":144.95910487061184,"lat":-37.80061088971732},"zoom":18.572204782819195,"bearing":-20.435636691643822,"pitch":57.99999999999999}
     },
-    {
-        delay:10000,
-        caption: 'Pedestrian sensors count foot traffic every hour',
-        name: 'Pedestrian sensor locations',
-        dataset: new SourceData('ygaw-6rzq'),
-        flyTo: {"center":{"lng":144.96367854761945,"lat":-37.80236896106898},"zoom":15.389393850725732,"bearing":-143.5844675124954,"pitch":60}                                
-    },
+
 
     /*{
         delay: 10000,
@@ -235,7 +302,7 @@ export const datasets = [
         //flyTo: {"center":{"lng":144.9427325673331,"lat":-37.78444940593038},"zoom":14.5,"bearing":-163.3102224426674,"pitch":35.500000000000014}
     },
     {
-        delay: 10000,
+        delay: 8000,
         //datasetLead: 3000,
         caption: '...and every plane tree.', // add a number
         name: 'Trees, with species and dimensions (Urban Forest)',
@@ -349,115 +416,34 @@ export const datasets = [
         flyTo: {"center":{"lng":144.96354379775335,"lat":-37.82595306646476},"zoom":14.665437375740426,"bearing":0,"pitch":59.5}
 
     }, 
+//*********************  "But did you know" data
+    {
+        delay:10000,
+        caption: 'But did you know we have data about healthy, affordable food services?',
+        name: 'Community food services with opening hours, public transport and parking options',
+        mapbox: {
+            id: 'food',
+            type: 'symbol',
+            source: 'mapbox://cityofmelbourne.7xvk0k3l',
+            'source-layer': 'Community_food_services_with_-a7cj9v',
+            paint: {
+                'text-color': 'hsl(30, 80%, 56%)' // bright orange
+                //'text-color': 'rgb(249, 243, 178)', // muted orange, a city for people
+            },
+            layout: {
+                'text-field': '{Name}',
+                'text-size': 12,
+
+            }
+        },
+        //south Melbourne ish
+        flyTo: {"center":{"lng":144.96844507663542,"lat":-37.82459949103244},"zoom":14.016979864482233,"bearing":-11.578336166142888,"pitch":60}
+        //flyTo: {"center":{"lng":144.97473730944466,"lat":-37.8049071559513},"zoom":15.348676099922852,"bearing":-154.4971333289701,"pitch":60}
+        //flyTo: {"center":{"lng":144.98492251438307,"lat":-37.80310972727281},"zoom":15.358509789790808,"bearing":-78.3999999999997,"pitch":58.500000000000014}
+    },
     
 
 
-    {
-        delay: 10000,
-        linger: 5000,
-        caption: 'Our data tells you where your dog doesn\'t need a leash',
-        name: 'Dog Walking Zones',
-        mapbox: {
-            id: '2',
-            type: 'fill',
-            source: 'mapbox://cityofmelbourne.clzap2je',
-            'source-layer': 'Dog_Walking_Zones-3fh9q4',
-            paint: {
-                'fill-color': 'hsl(340, 97%,65%)', //hsl(340, 97%, 45%)
-                'fill-opacity': 0.8
-            },
-            filter: ['==', 'status', 'offleash']
-        },
-        flyTo:{"center":{"lng":144.98613987732932,"lat":-37.83888266596187},"zoom":15.096419579432878,"bearing":-30,"pitch":57.49999999999999}
-    },
-    { 
-        delay:10000,
-        name: 'Street addresses',
-        caption: 'Every single street address in the municipality',
-        // need to zoom in close on this one
-        mapbox: {
-            id: 'addresses',
-            type: 'symbol',
-            source: 'mapbox://cityofmelbourne.3ip3couo',
-            'source-layer': 'Street_addresses-97e5on',
-            paint: {
-                
-                'text-color': 'rgb(0,183,79)',
-                
-            },
-            layout: {
-                'text-field': '{street_no}',
-                'text-allow-overlap': true,
-                'text-size': 10,
-            }
-        },
-        //mapboxpoints: 'mapbox://cityofmelbourne.3ip3couo'//'Street_addresses-97e5on',
-        // north melbourne
-        //flyTo: {"center":{"lng":144.91686220714365,"lat":-37.79330210287267},"zoom":18.098035466133457,"bearing":64.79999999999961,"pitch":45}
-        // south yarra/prahran ish
-        flyTo: {"center":{"lng":144.984790451856,"lat":-37.83391831182901},"zoom":18,"bearing":-39.99999999999949,"pitch":60}
-    },
-    { 
-        delay:1000,
-        name: 'Property boundaries',
-        caption: 'And every property boundary',
-        // need to zoom in close on this one
-        mapbox: {
-            id: 'boundaries-repeat',
-            type: 'line',
-            source: 'mapbox://cityofmelbourne.799drouh',
-            'source-layer': 'Property_boundaries-061k0x',
-            paint: {
-                
-                'line-color': 'rgb(0,183,79)',
-                'line-width': {
-                    stops: [
-                        [13, 0.5],
-                        [16, 2]
-                    ]
-                }
-
-                
-            },
-        },
-        // just repeat previous view.
-        flyTo: {"center":{"lng":144.984790451856,"lat":-37.83391831182901},"zoom":18,"bearing":-39.99999999999949,"pitch":60}
-    },
-    { 
-        delay:15000,
-        name: 'Property boundaries',
-        caption: 'And every property boundary',
-        // need to zoom in close on this one
-        mapbox: {
-            id: 'boundaries',
-            type: 'line',
-            source: 'mapbox://cityofmelbourne.799drouh',
-            'source-layer': 'Property_boundaries-061k0x',
-            paint: {
-                
-                'line-color': 'rgb(0,183,79)',
-                'line-width': {
-                    stops: [
-                        [13, 0.5],
-                        [16, 2]
-                    ]
-                }
-
-                
-            },
-        },
-        // birds eye
-        flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:14,bearing:0,pitch:0, duration:10000},
-        
-        // south yarra/prahran ish
-        //flyTo: {"center":{"lng":144.984790451856,"lat":-37.83391831182901},"zoom":16.19242336690863,"bearing":-39.99999999999949,"pitch":60}
-        
-
-        //mapboxpoints: 'mapbox://cityofmelbourne.3ip3couo'//'Street_addresses-97e5on',
-        // north melbourne
-        //flyTo: {"center":{"lng":144.91686220714365,"lat":-37.79330210287267},"zoom":18.098035466133457,"bearing":64.79999999999961,"pitch":45}
-        //flyTo: {"center":{"lng":144.984790451856,"lat":-37.83391831182901},"zoom":16.19242336690863,"bearing":-39.99999999999949,"pitch":60}
-    },
     { 
         delay:0,
         name: 'Garbage collection zones',
@@ -481,14 +467,18 @@ export const datasets = [
             },
         },
         linger:10000,
+        // Fawkner Parkish
+        flyTo: {center: { lng:144.965437, lat:-37.814225}, zoom: 13.7,bearing:-30.8, pitch:60}
         // birds eye, zoomed out
-        flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:13,bearing:0,pitch:0},
+        //flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:13,bearing:0,pitch:0},
     },
-    { 
+
+
+
+/*    { 
         delay:10000,
         name: 'Garbage collection zones',
         caption: 'Which night is bin night',
-        // need to zoom in close on this one
         mapbox: {
             id: 'garbage-2',
             type: 'symbol',
@@ -510,7 +500,7 @@ export const datasets = [
         }
         // birds eye
         //flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:14,bearing:0,pitch:0, duration:10000},
-    },
+    },*/
 
 
     { 
@@ -559,19 +549,95 @@ export const datasets = [
         dataset: new SourceData('ru3z-44we'),
         caption: 'Public toilets...',
         delay: 5000,
-        flyTo: {"center":{"lng":144.97027688989027,"lat":-37.81107254397835},"zoom":14.8,"bearing":-89.74253780407638,"pitch":60}
+        flyTo: {"center":{"lng":144.97027688989027,"lat":-37.81107254397835},"zoom":14.8,"bearing":-89.74253780407638,"pitch":60},
+        options:{
+            symbol: {
+                layout: {
+                    'icon-image': 'toilet-15',
+                    'icon-allow-overlap': true
+                }
+            }
+        }
     },
     {
         dataset: new SourceData('ru3z-44we'),
         caption: 'Public toilets...that are accessible for wheelchair users',
         filter: ['==','wheelchair','yes'],
+        delay: 1,
+        linger:5000,
+        flyTo: {"center":{"lng":144.97027688989027,"lat":-37.81107254397835},"zoom":14.8,"bearing":-89.74253780407638,"pitch":60},
+        options:{
+            symbol: {
+                layout: {
+                    'icon-image': 'wheelchair-15',
+                    'icon-allow-overlap': true
+                }
+            }
+        }
+
+    },
+    { 
+        dataset: new SourceData('ru3z-44we'),
+        caption: 'Public toilets...that are accessible for wheelchair users',
         delay: 5000,
-        flyTo: {"center":{"lng":144.97027688989027,"lat":-37.81107254397835},"zoom":14.8,"bearing":-89.74253780407638,"pitch":60}
+        //linger:5000,
+        flyTo: {"center":{"lng":144.97027688989027,"lat":-37.81107254397835},"zoom":14.8,"bearing":-89.74253780407638,"pitch":60},
+        filter: ['!=','wheelchair','yes'],
+        options:{
+            symbol: {
+                layout: {
+                    'icon-image': 'toilet-15',
+                    'icon-allow-overlap': true
+                }
+            }
+        }
+
+
+    },
+    {
+        delay: 10000,
+        linger: 5000,
+        caption: 'Our data tells you where your dog doesn\'t need a leash',
+        name: 'Dog Walking Zones',
+        mapbox: {
+            id: '2',
+            type: 'fill',
+            source: 'mapbox://cityofmelbourne.clzap2je',
+            'source-layer': 'Dog_Walking_Zones-3fh9q4',
+            paint: {
+                'fill-color': 'hsl(340, 97%,65%)', //hsl(340, 97%, 45%)
+                'fill-opacity': 0.8
+            },
+            filter: ['==', 'status', 'offleash']
+        },
+        flyTo: {"center":{"lng":144.96472084161525,"lat":-37.79947747257584},"zoom":14.933931528036048,"bearing":-57.64132745183708,"pitch":60}
+        //flyTo:{"center":{"lng":144.98613987732932,"lat":-37.83888266596187},"zoom":15.096419579432878,"bearing":-30,"pitch":57.49999999999999}
+    },
+
+
+    {
+        delay: 10000,
+        caption: 'There\'s even every cafe and restaurant',
+        
+        dataset: new SourceData('sfrg-zygb'),
+        // CBD looking towards Carlton
+        flyTo:{"center":{"lng":144.96420099897045,"lat":-37.8040762916216},"zoom":15.695662136339653,"bearing":-22.56971876500631,"pitch":60},
+        //flyTo: {"center":{"lng":144.97027688989027,"lat":-37.81107254397835},"zoom":14.8,"bearing":-89.74253780407638,"pitch":60},
+        //flyTo:{"center":{"lng":144.97098789992964,"lat":-37.81021310404749},"zoom":16.02773233201699,"bearing":-135.21975308641981,"pitch":60},
+        options: {
+            symbol: {
+                layout: {
+                    'icon-image': 'cafe-15',
+                    'icon-allow-overlap': true
+                }
+            }
+        }
     },
     
     {
-        delay:10000,
-        caption: 'The skyline of our city',
+        delay:2000,
+        linger:10000,
+        caption: 'What will <b><i>you</i></b>do with our data?',
         name: 'Building outlines',
         opacity:0.6,
         mapbox: {
@@ -590,25 +656,39 @@ export const datasets = [
 
         },
         // from abbotsfordish
-        flyTo:{"center":{"lng":144.9725135032764,"lat":-37.807415209051285},"zoom":14.896259153012243,"bearing":-106.40000000000015,"pitch":60}
+        //flyTo:{"center":{"lng":144.9725135032764,"lat":-37.807415209051285},"zoom":14.896259153012243,"bearing":-106.40000000000015,"pitch":60}
         //from south
         //flyTo: {"center":{"lng":144.9470140753445,"lat":-37.81520062726666},"zoom":15.458784930238672,"bearing":98.39999999999988,"pitch":60}
     },
     {
-        delay: 10000,
-        caption: 'Every cafe and restaurant',
-        
-        dataset: new SourceData('sfrg-zygb'),
-        flyTo:{"center":{"lng":144.97098789992964,"lat":-37.81021310404749},"zoom":16.02773233201699,"bearing":-135.21975308641981,"pitch":60},
-        options: {
-            symbol: {
-                layout: {
-                    'icon-image': 'cafe-15',
-                    'icon-allow-overlap': true
+        delay:40000,
+        caption: 'What will <b><i>you</i></b>do with our data?',
+        name: 'Building outlines',
+        opacity:0.6,
+        mapbox: {
+            id: 'buildings',
+            type: 'fill-extrusion',
+            source: 'mapbox://cityofmelbourne.052wfh9y',
+            'source-layer': 'Building_outlines-0mm7az',
+            paint: {
+                'fill-extrusion-color': 'hsl(146, 100%, 20%)',
+                'fill-extrusion-opacity': 0.6,
+                'fill-extrusion-height': {
+                    'property':'height',
+                    type: 'identity'
                 }
             }
-        }
-    },
+
+        },
+        //matching starting position?
+        flyTo:{center:{lng:144.95,lat:-37.813},bearing:0,zoom:14,pitch:45,duration:20000}
+        // from abbotsfordish
+        //flyTo:{"center":{"lng":144.9725135032764,"lat":-37.807415209051285},"zoom":14.896259153012243,"bearing":-106.40000000000015,"pitch":60}
+        //from south
+        //flyTo: {"center":{"lng":144.9470140753445,"lat":-37.81520062726666},"zoom":15.458784930238672,"bearing":98.39999999999988,"pitch":60}
+    }
+];
+const crappyFinale = [
     //////////////////////////////////
     // Ze grande finale
     {
@@ -691,6 +771,21 @@ export const datasets = [
     },
 
 ];
+
+const unused = [
+{
+        delay:10000,
+        caption: 'Pedestrian sensors count foot traffic every hour',
+        name: 'Pedestrian sensor locations',
+        dataset: new SourceData('ygaw-6rzq'),
+        flyTo: {"center":{"lng":144.96367854761945,"lat":-37.80236896106898},"zoom":15.389393850725732,"bearing":-143.5844675124954,"pitch":60}                                
+    }
+];
+
+
+
+
+
 export const datasets2 = [
     { 
         delay: 10000, 
