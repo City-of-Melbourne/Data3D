@@ -135,6 +135,16 @@ function showCaption(name, dataId, caption) {
  
  }
 
+ function tweakPlaceLabels(map, up) {
+    ['place-suburb', 'place-neighbourhood'].forEach(layerId => {
+
+        //rgb(227, 4, 80); CoM pop magenta
+        //map.setPaintProperty(layerId, 'text-color', up ? 'rgb(227,4,80)' : 'hsl(0,0,30%)'); // CoM pop green
+        map.setPaintProperty(layerId, 'text-color', up ? 'rgb(0,183,79)' : 'hsl(0,0,30%)'); // CoM pop green
+        
+    });
+ }
+
  function tweakBasemap(map) {
     var placecolor = '#888'; //'rgb(206, 219, 175)';
     var roadcolor = '#777'; //'rgb(240, 191, 156)';
@@ -216,23 +226,29 @@ Each dataset is pre-loaded by being "shown" invisible (opacity 0), then "reveale
 function nextDataset(map, datasetNo) {
     function reveal(d) {
         // TODO change 0.9 to something specific for each type
-        map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), def(d.opacity, 0.9));
-        if (d.mapbox) {
+        if (d.mapbox || d.dataset) {
+            map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), def(d.opacity, 0.9));
+        } else if (d.paint) {
+            d._oldPaint = [];
+            d.paint.forEach(paint => {
+                d._oldPaint.push([paint[0], paint[1], map.getPaintProperty(paint[0], paint[1])]);
+                map.setPaintProperty(paint[0], paint[1], paint[2]);
+            });
+        }
+        if (d.mapbox || d.paint) {
             showCaption(d.name, undefined, d.caption);
-        } else {
+        } else if (d.dataset) {
             showCaption(d.dataset.name, d.dataset.dataId, d.caption);
         }
     }
     function preloadDataset(d) {
         if (d.mapbox) {
             showMapboxDataset(map, d, true);
-        } else {
+        } else if (d.dataset) {
             d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  true);
             d.mapvis.setVisColumn(d.column);
             d.layerId = d.mapvis.layerId;
         }
-    }
-    function showDatasetCaption(d) {
     }
 
     _datasetNo = datasetNo;
@@ -277,8 +293,15 @@ function nextDataset(map, datasetNo) {
         if (d.mapbox)
             map.removeLayer(d.mapbox.id);
 
+        if (d.paint) // restore paint settings before they were messed up
+            d._oldPaint.forEach(paint => {
+                map.setPaintProperty(paint[0], paint[1], paint[2]);
+            });
+
+
         
     }, d.delay + def(d.linger, 0)); // optional "linger" time allows overlap. Not generally needed since we implemented preloading.
+    
     setTimeout(() => {
         nextDataset(map, (datasetNo + 1) % datasets.length);
     }, d.delay );
@@ -332,6 +355,8 @@ function loadOneDataset() {
     });
     map.addControl(new mapboxgl.AttributionControl(), 'top-right');
     //map.once('load', () => tweakBasemap(map));
+    //map.once('load',() => tweakPlaceLabels(map,true));
+    //setTimeout(()=>tweakPlaceLabels(map, false), 8000);
     map.on('moveend', e=> {
         console.log({
             center: map.getCenter(),

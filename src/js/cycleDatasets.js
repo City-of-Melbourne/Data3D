@@ -132,6 +132,16 @@ import { SourceData } from './sourceData';
 
 export const datasets = [
     {
+        delay:6000,
+        caption:'This is Melbourne',
+        paint: [
+            ['place-suburb', 'text-color', 'green'],
+            ['place-neighbourhood', 'text-color', 'green']
+        ],
+        name: ''
+
+    },
+    {
         delay:10000,
         caption: 'Food services available free or low cost to our community',
         name: 'Community food services with opening hours, public transport and parking options',
@@ -184,7 +194,7 @@ export const datasets = [
     },*/
     {
         delay: 10000,
-        caption: 'The Urban Forest contains every elm...',
+        caption: 'The Urban Forest contains every elm tree...',
         name: 'Trees, with species and dimensions (Urban Forest)',
         mapbox: {
             id: 'alltrees',            
