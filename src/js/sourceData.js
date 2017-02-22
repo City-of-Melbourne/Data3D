@@ -87,14 +87,21 @@ export class SourceData {
         function locationToCoords(location) {
             if (String(location).length === 0)
                 return null;
-            // "new backend" datasets use a WKT field [POINT (lon lat)] instead of (lat, lon)
-            if (this.locationIsPoint) {
-                return location.replace('POINT (', '').replace(')', '').split(' ').map(n => Number(n));
-            } else if (this.shape === 'point') {
-                //console.log(location.length);
-                return [Number(location.split(', ')[1].replace(')', '')), Number(location.split(', ')[0].replace('(', ''))];
-            } else 
-            return location;
+            try {
+                // "new backend" datasets use a WKT field [POINT (lon lat)] instead of (lat, lon)
+                if (this.locationIsPoint) {
+                    return location.replace('POINT (', '').replace(')', '').split(' ').map(n => Number(n));
+                } else if (this.shape === 'point') {
+                    //console.log(location.length);
+                    return [Number(location.split(', ')[1].replace(')', '')), Number(location.split(', ')[0].replace('(', ''))];
+                } else 
+                    return location;
+
+            } catch (e) {
+                console.error(`Unreadable location ${location} in ${this.name}.`);
+                console.error(e);
+
+            }
 
         }
 
@@ -115,7 +122,8 @@ export class SourceData {
 
         row[this.locationColumn] = locationToCoords.call(this, row[this.locationColumn]);
 
-
+        if (!row[this.locationColumn])
+            return null; // skip this row.
 
         return row;
     }
@@ -158,14 +166,24 @@ export class SourceData {
                 return Promise.resolve(true);
             }
         }).then(() => {
+            try {
             return d3.csv('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '/rows.csv?accessType=DOWNLOAD', this.convertRow.bind(this))
             .then(rows => {
+                console.log("Got rows for " + this.name);
                 this.rows = rows;
                 this.computeSortedFrequencies();
                 if (this.shape === 'polygon')
                     this.computeBlockIndex();
                 return this;
+            })
+            .catch(e => {
+                console.error('Problem loading ' + this.name + '.');
+                console.error(e);
             });
+            } catch (e) {
+                console.error('Problem loading ' + this.name);
+                console.error(e);
+            }
         });
     }
 

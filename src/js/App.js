@@ -316,9 +316,10 @@ function nextDataset(map, datasetNo) {
 function loadDatasets(map) {
     return Promise
         .all(datasets.map(d => { 
-            if (d.dataset)
+            if (d.dataset) {
+                console.log('Loading dataset ' + d.dataset.dataId);
                 return d.dataset.load();
-            else
+            } else
                 return Promise.resolve();
                 // style isn't done loading so we can't add sources. not sure it will actually trigger downloading anyway.
                 //return Promise.resolve (addMapboxDataset(map, d));
@@ -346,7 +347,9 @@ function loadOneDataset() {
     if (demoMode) {
         // if we did this after the map was loading, call map.resize();
         document.querySelector('#features').style.display = 'none';        
-        document.querySelector('#legends').style.display = 'none';        
+        document.querySelector('#legends').style.display = 'none';
+        // For people who want the script.        
+        window.captions = datasets.map(d => `${d.caption} (${d.delay / 1000}s)`).join('\n');
     }
 
     let map = new mapboxgl.Map({
@@ -394,7 +397,7 @@ function loadOneDataset() {
         whenMapLoaded(map, () => {
 
             if (demoMode) {
-                nextDataset(map, 22);
+                nextDataset(map, 0);
             } else {
                 showDataset(map, dataset);
                 // would be nice to support loading mapbox datasets but
