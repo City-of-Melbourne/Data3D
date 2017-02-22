@@ -565,7 +565,7 @@ body {
 For very small screens. This isn't a real target for this app, but useful for demos.
 Mostly, just trying to move the overlays out of the way.
 */
-@media only screen and (max-width: 768px), only screen and (max-height: 768px) {
+@media only screen and (max-width: 768px), only screen and (max-height: 600px) {
   #caption {
     top: 0;
     padding: 0; }
