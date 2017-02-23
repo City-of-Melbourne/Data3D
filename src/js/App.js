@@ -236,11 +236,14 @@ function nextDataset(map, datasetNo) {
                 map.setPaintProperty(paint[0], paint[1], paint[2]);
             });
         }
-        if (d.mapbox || d.paint) {
+        if (d.caption) {
             showCaption(d.name, undefined, d.caption);
         } else if (d.dataset) {
             showCaption(d.dataset.name, d.dataset.dataId, d.caption);
         }
+
+        if (d.superCaption)
+            document.querySelector('#caption').classList.add('supercaption');
     }
     function preloadDataset(d) {
         console.log('Preload ' + (!!d.mapbox?'mapbox':'non-mapbox') + ' dataset: ' + d.caption);
@@ -253,12 +256,27 @@ function nextDataset(map, datasetNo) {
             d.layerId = d.mapvis.layerId;
         }
     }
+    function removeDataset(d) {
+        if (d.mapvis)
+            d.mapvis.remove();
+        
+        if (d.mapbox)
+            map.removeLayer(d.mapbox.id);
+
+        if (d.paint) // restore paint settings before they were messed up
+            d._oldPaint.forEach(paint => {
+                map.setPaintProperty(paint[0], paint[1], paint[2]);
+            });
+
+        if (d.superCaption)
+            document.querySelector('#caption').classList.remove('supercaption');
+    }
 
     _datasetNo = datasetNo;
     let d = datasets[datasetNo], 
         nextD = datasets[(datasetNo + 1) % datasets.length];
 
-
+    // if for some reason this dataset hasn't already been loaded.
     if (!d.layerId || !map.getLayer(d.layerId) /* this second test shouldn't be needed...*/) {
         preloadDataset(d);
     }
@@ -266,7 +284,12 @@ function nextDataset(map, datasetNo) {
         
 
     // load, but don't show, next one. // Comment out the next line to not do the pre-loading thing.
-    preloadDataset(nextD);
+    // we want to skip "datasets" that are just captions etc.
+    let nextRealDatasetNo = (datasetNo + 1) % datasets.length;
+    while (!datasets[nextRealDatasetNo].dataset && !datasets[nextRealDatasetNo].mapbox)
+        nextRealDatasetNo = (nextRealDatasetNo + 1) % datasets.length;        
+
+    preloadDataset(datasets[nextRealDatasetNo]);
 
     if (d.showLegend) {
         document.querySelector('#legends').style.display = 'block';
@@ -290,16 +313,7 @@ function nextDataset(map, datasetNo) {
     }
 
     setTimeout(() => {
-        if (d.mapvis)
-            d.mapvis.remove();
-        
-        if (d.mapbox)
-            map.removeLayer(d.mapbox.id);
-
-        if (d.paint) // restore paint settings before they were messed up
-            d._oldPaint.forEach(paint => {
-                map.setPaintProperty(paint[0], paint[1], paint[2]);
-            });
+        removeDataset(d);
 
 
         
@@ -361,7 +375,7 @@ function loadOneDataset() {
         pitch: 45, // TODO revert for flat
         attributionControl: false
     });
-    map.addControl(new mapboxgl.AttributionControl(), 'top-right');
+    map.addControl(new mapboxgl.AttributionControl({compact:true}), 'top-right');
     //map.once('load', () => tweakBasemap(map));
     //map.once('load',() => tweakPlaceLabels(map,true));
     //setTimeout(()=>tweakPlaceLabels(map, false), 8000);

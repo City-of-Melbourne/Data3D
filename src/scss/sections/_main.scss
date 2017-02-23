@@ -61,7 +61,8 @@ body {
 
 // inside #mapoverlay
 #caption, #footer {
-    position: relative;
+    //position: relative;
+    position:absolute;
     width:100%;//800px; //$captionwidth;
     margin: 0 auto;
 }
@@ -80,7 +81,8 @@ body {
 $captionwidth: 800px;
 
 #caption {
-    top: 1em;
+    //top: 1em;
+    bottom: 100px;
     padding:1em;
     //border: 1px solid lightgray;
     /*    
@@ -93,6 +95,21 @@ $captionwidth: 800px;
     */
     background: transparent;
     margin-left: 0;
+    transition:min-height 2s;
+    min-height:3em;
+}
+
+#caption.supercaption {
+    min-height:15em;
+    height:15em;
+    //border:1px solid lightgrey;
+    background:rgba(0,0,0,0.5);
+    top:calc(50vh - 7.5em);
+}
+
+#caption.supercaption h1 {
+    background:transparent;
+    margin-top: auto; margin-bottom:auto;
 }
 
 #footer .dataset {
@@ -140,6 +157,7 @@ $captionwidth: 800px;
 
 
 #logo {
+    display:none; // we'll show it only on the front page now
     background-image:url(../images/com-masterlogo.svg);
     width: 140px;
     height:40px;

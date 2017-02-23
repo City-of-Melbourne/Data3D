@@ -148,13 +148,22 @@ import { SourceData } from './sourceData';
 
 export const datasets = [
     {
+        delay:5000,
+        caption:'Melbourne has a lot of data.',
+        superCaption: true,
+        paint:[],
+        name:''
+    },
+
+    {
         delay:8000,
         caption:'This is Melbourne',
         paint: [
             ['place-suburb', 'text-color', 'rgb(0,183,79)'],
             ['place-neighbourhood', 'text-color', 'rgb(0,183,79)']
         ],
-        name: ''
+        name: '',
+        flyTo: {center:{lng:144.95,lat:-37.813},zoom:13,pitch:45,bearing:0}
 
     },
     { 
@@ -259,6 +268,14 @@ export const datasets = [
         flyTo: {"center":{"lng":144.95767415418266,"lat":-37.791686619772975},"zoom":15.487337457356691,"bearing":-122.40000000000009,"pitch":60}
         //flyTo: {"center":{"lng":144.94318163755105,"lat":-37.78351953419449},"zoom":15.773488574721082,"bearing":147.65219382373107,"pitch":59.99589825769096}
     },*/
+    {
+        delay:5000,
+        caption:'Urban Forest',
+        superCaption: true,
+        paint:[],
+        name:''
+    },
+
     {
         delay: 10000,
         caption: 'The Urban Forest contains every elm tree...',
@@ -637,7 +654,7 @@ export const datasets = [
     {
         delay:2000,
         linger:10000,
-        caption: 'What will <b><i>you</i></b>do with our data?',
+        caption: 'What will <b><i>you</i></b> do with our data?',
         name: 'Building outlines',
         opacity:0.6,
         mapbox: {
@@ -662,7 +679,7 @@ export const datasets = [
     },
     {
         delay:40000,
-        caption: 'What will <b><i>you</i></b>do with our data?',
+        caption: 'What will <b><i>you</i></b> do with our data?',
         name: 'Building outlines',
         opacity:0.6,
         mapbox: {
@@ -681,7 +698,7 @@ export const datasets = [
 
         },
         //matching starting position?
-        flyTo:{center:{lng:144.95,lat:-37.813},bearing:0,zoom:14,pitch:45,duration:20000}
+        flyTo:{center:{lng:144.95,lat:-37.813},bearing:0,zoom:15,pitch:45,duration:20000}
         // from abbotsfordish
         //flyTo:{"center":{"lng":144.9725135032764,"lat":-37.807415209051285},"zoom":14.896259153012243,"bearing":-106.40000000000015,"pitch":60}
         //from south
@@ -750,7 +767,7 @@ const crappyFinale = [
     },
 
     {
-        caption: 'What will <u>you</u> do with our data?',
+        caption: 'What will <u>you</u>&nbsp; do with our data?',
         delay:20000,
         opacity:0.4,
         mapbox: {
