@@ -25,9 +25,10 @@ export class MapVis {
         this.featureHoverHook = featureHoverHook; // f(properties, sourceData)
         options = def(options, {});
         this.options = {
-            circleRadius: def(options.circleRadius, 10),
+            circleRadius: def(options.circleRadius, 20),
             invisible: options.invisible, // whether to create with opacity 0
-            symbol: options.symbol // Mapbox symbol properties, meaning we show symbol instead of circle
+            symbol: options.symbol, // Mapbox symbol properties, meaning we show symbol instead of circle
+            enumColors: options.enumColors // override default color choices
         };
 
         //this.options.invisible = false;
@@ -47,14 +48,14 @@ export class MapVis {
                 this.map.addSource(sourceId, pointDatasetToGeoJSON(this.sourceData) );
 
             if (!this.options.symbol) {
-                this.map.addLayer(circleLayer(sourceId, this.layerId, this.filter, false, this.options.invisible));
+                this.map.addLayer(circleLayer(sourceId, this.layerId, this.filter, false, this.options.circleRadius, this.options.invisible));
                 if (this.featureHoverHook)
-                    this.map.addLayer(circleLayer(sourceId, this.layerIdHighlight, ['==', this.sourceData.locationColumn, '-'], true, this.options.invisible)); // highlight layer
+                    this.map.addLayer(circleLayer(sourceId, this.layerIdHighlight, ['==', this.sourceData.locationColumn, '-'], true, this.options.circleRadius, this.options.invisible)); // highlight layer
             } else {
                 this.map.addLayer(symbolLayer(sourceId, this.layerId, this.options.symbol, this.filter, false, this.options.invisible));
                 if (this.featureHoverHook)
                     // try using a circle highlight even on an icon
-                    this.map.addLayer(circleLayer(sourceId, this.layerIdHighlight, ['==', this.sourceData.locationColumn, '-'], true, this.options.invisible)); // highlight layer
+                    this.map.addLayer(circleLayer(sourceId, this.layerIdHighlight, ['==', this.sourceData.locationColumn, '-'], true, this.options.circleRadius, this.options.invisible)); // highlight layer
                     //this.map.addLayer(symbolLayer(sourceId, this.layerIdHighlight, this.options.symbol, ['==', this.sourceData.locationColumn, '-'], true)); // highlight layer
             }
         };
@@ -115,8 +116,8 @@ export class MapVis {
             this.map.setPaintProperty(this.layerId, 'circle-radius', {
                 property: dataColumn,
                 stops: [
-                    [{ zoom: 10, value: sourceData.mins[dataColumn]}, 1],
-                    [{ zoom: 10, value: sourceData.maxs[dataColumn]}, 3],
+                    [{ zoom: 10, value: sourceData.mins[dataColumn]}, minSize/3],
+                    [{ zoom: 10, value: sourceData.maxs[dataColumn]}, maxSize/3],
                     [{ zoom: 17, value: sourceData.mins[dataColumn]}, minSize],
                     [{ zoom: 17, value: sourceData.maxs[dataColumn]}, maxSize]
                 ]
@@ -133,9 +134,9 @@ export class MapVis {
 
         this.setCircleColorStyle = function(dataColumn) {
             // from ColorBrewer
-            const enumColors = ['#1f78b4','#fb9a99','#b2df8a','#33a02c','#e31a1c','#fdbf6f','#a6cee3', '#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'];
+            const enumColors = def(this.options.enumColors, ['#1f78b4','#fb9a99','#b2df8a','#33a02c','#e31a1c','#fdbf6f','#a6cee3', '#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']);
 
-            let enumStops = this.sourceData.sortedFrequencies[dataColumn].map((val,i) => [val, enumColors[i]]);
+            let enumStops = this.sourceData.sortedFrequencies[dataColumn].map((val,i) => [val, enumColors[i % enumColors.length]]);
             this.map.setPaintProperty(this.layerId, 'circle-color', {
                 property: dataColumn,
                 type: 'categorical',
@@ -183,7 +184,7 @@ export class MapVis {
             if (this.mousemove) {
                 this.map.removeLayer(this.layerIdHighlight);
                 this.map.off('mousemove', this.mousemove);
-                thouse.mousemove = undefined;
+                this.mousemove = undefined;
             }
         };
         // The actual constructor...
@@ -253,7 +254,7 @@ function pointDatasetToGeoJSON(sourceData) {
     return datasource;
 };
 
-function circleLayer(sourceId, layerId, filter, highlight, invisible) {
+function circleLayer(sourceId, layerId, filter, highlight, size, invisible) {
     let ret = {
         id: layerId,
         type: 'circle',
@@ -265,7 +266,12 @@ function circleLayer(sourceId, layerId, filter, highlight, invisible) {
             'circle-stroke-color': highlight ? 'white' : 'rgba(50,50,50,0.5)',
             'circle-stroke-width': 1,
             'circle-radius': {
-                stops: highlight ? [[10,4], [17,10]] : [[10,2], [17,5]]
+                stops: highlight ? [
+                    [10,size * 0.4], 
+                    [17,size * 1.0]
+                ] : [
+                    [10,size * 0.2], 
+                    [17,size * 0.5]]
             }
         }
     };
@@ -287,8 +293,13 @@ function symbolLayer(sourceId, layerId, symbol, filter, highlight, invisible) {
     ret.paint['icon-opacity'] = !invisible ? 0.95 : 0;
 
     //ret.layout = def(symbol.layout, {});
-    if (symbol.layout)
+    if (symbol.layout) {
+        if (symbol.layout['text-field'] && invisible)
+            ret.paint['text-opacity'] = 0;
         ret.layout = symbol.layout;
+    }
+
+
 
     return ret;
 }

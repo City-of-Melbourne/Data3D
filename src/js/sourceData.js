@@ -98,7 +98,7 @@ export class SourceData {
                     return location;
 
             } catch (e) {
-                console.error(`Unreadable location ${location} in ${this.name}.`);
+                console.log(`Unreadable location ${location} in ${this.name}.`);
                 console.error(e);
 
             }
@@ -169,7 +169,7 @@ export class SourceData {
             try {
             return d3.csv('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '/rows.csv?accessType=DOWNLOAD', this.convertRow.bind(this))
             .then(rows => {
-                console.log("Got rows for " + this.name);
+                //console.log("Got rows for " + this.name);
                 this.rows = rows;
                 this.computeSortedFrequencies();
                 if (this.shape === 'polygon')

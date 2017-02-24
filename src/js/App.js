@@ -33,11 +33,12 @@ const opacityProp = {
         };
 
 // returns a value like 'circle-opacity', for a given layer style.
-function getOpacityProp(layer) {
+function getOpacityProps(layer) {
+    let ret = [opacityProp[layer.type]];
     if (layer.layout && layer.layout['text-field'])
-        return 'text-opacity';
-    else
-        return opacityProp[layer.type];
+        ret.push('text-opacity');
+    
+    return ret;
 }
 
 //false && whenMapLoaded(() =>
@@ -203,18 +204,76 @@ function showMapboxDataset(map, dataset, invisible) {
             //dataset.mapbox
         style = clone(dataset.mapbox);
         if (invisible) {
-            style.paint[getOpacityProp(style)] = 0;
+            getOpacityProps(style).forEach(prop => style.paint[prop] = 0);
+            
         }
         map.addLayer(style);
-    } else {
-        map.setPaintProperty(dataset.mapbox.id, getOpacityProp(style), def(dataset.opacity,0.9)); // TODO set right opacity
+    } else if (!invisible){
+        getOpacityProps(style).forEach(prop =>
+            map.setPaintProperty(dataset.mapbox.id, prop, def(dataset.opacity,0.9)));
     }
-    dataset.layerId = dataset.mapbox.id;
+    dataset._layerId = dataset.mapbox.id;
 
     //if (!invisible) 
         // surely this is an error - mapbox datasets don't have 'dataId'
         //showCaption(dataset.name, dataset.dataId, dataset.caption);
 }
+
+function preloadDataset(map, d) {
+    console.log('Preload: ' + d.caption);
+    if (d.mapbox) {
+
+        showMapboxDataset(map, d, true);
+    } else if (d.dataset) {
+        d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  true);
+        d.mapvis.setVisColumn(d.column);
+        d._layerId = d.mapvis.layerId;
+    }
+}
+// Turn invisible dataset into visible
+function revealDataset(map, d) {
+    console.log('Reveal: ' + d.caption  + ` (${_datasetNo})`);
+    // TODO change 0.9 to something specific for each type
+    if (d.mapbox || d.dataset) {
+        getOpacityProps(map.getLayer(d._layerId)).forEach(prop =>
+            map.setPaintProperty(d._layerId, prop, def(d.opacity, 0.9)));
+    } else if (d.paint) {
+        d._oldPaint = [];
+        d.paint.forEach(paint => {
+            d._oldPaint.push([paint[0], paint[1], map.getPaintProperty(paint[0], paint[1])]);
+            map.setPaintProperty(paint[0], paint[1], paint[2]);
+        });
+    }
+    if (d.caption) {
+        showCaption(d.name, undefined, d.caption);
+    } else if (d.dataset) {
+        showCaption(d.dataset.name, d.dataset.dataId, d.caption);
+    }
+
+    if (d.superCaption)
+        document.querySelector('#caption').classList.add('supercaption');
+}
+// Remove the dataset from the map, like it was never loaded.
+function removeDataset(map, d) {
+    console.log('Remove: ' + d.caption  + ` (${_datasetNo})`);
+    if (d.mapvis)
+        d.mapvis.remove();
+    
+    if (d.mapbox)
+        map.removeLayer(d.mapbox.id);
+
+    if (d.paint) // restore paint settings before they were messed up
+        d._oldPaint.forEach(paint => {
+            map.setPaintProperty(paint[0], paint[1], paint[2]);
+        });
+
+    if (d.superCaption)
+        document.querySelector('#caption').classList.remove('supercaption');
+
+    d._layerId = undefined;
+}
+
+
 
 let _datasetNo='';
 /* Advance and display the next dataset in our loop 
@@ -223,73 +282,35 @@ Each dataset is pre-loaded by being "shown" invisible (opacity 0), then "reveale
     // TODO clean this up so relationship between "now" and "next" is clearer, no repetition.
 
 */
-function nextDataset(map, datasetNo) {
-    function reveal(d) {
-        console.log('Reveal ' + (!!d.mapbox?'mapbox':'non-mapbox') + ' dataset: ' + d.caption);
-        // TODO change 0.9 to something specific for each type
-        if (d.mapbox || d.dataset) {
-            map.setPaintProperty(d.layerId, getOpacityProp(map.getLayer(d.layerId)), def(d.opacity, 0.9));
-        } else if (d.paint) {
-            d._oldPaint = [];
-            d.paint.forEach(paint => {
-                d._oldPaint.push([paint[0], paint[1], map.getPaintProperty(paint[0], paint[1])]);
-                map.setPaintProperty(paint[0], paint[1], paint[2]);
-            });
-        }
-        if (d.caption) {
-            showCaption(d.name, undefined, d.caption);
-        } else if (d.dataset) {
-            showCaption(d.dataset.name, d.dataset.dataId, d.caption);
-        }
-
-        if (d.superCaption)
-            document.querySelector('#caption').classList.add('supercaption');
-    }
-    function preloadDataset(d) {
-        console.log('Preload ' + (!!d.mapbox?'mapbox':'non-mapbox') + ' dataset: ' + d.caption);
-        if (d.mapbox) {
-
-            showMapboxDataset(map, d, true);
-        } else if (d.dataset) {
-            d.mapvis = showDataset(map, d.dataset, d.filter, d.caption, true, d.options,  true);
-            d.mapvis.setVisColumn(d.column);
-            d.layerId = d.mapvis.layerId;
-        }
-    }
-    function removeDataset(d) {
-        if (d.mapvis)
-            d.mapvis.remove();
-        
-        if (d.mapbox)
-            map.removeLayer(d.mapbox.id);
-
-        if (d.paint) // restore paint settings before they were messed up
-            d._oldPaint.forEach(paint => {
-                map.setPaintProperty(paint[0], paint[1], paint[2]);
-            });
-
-        if (d.superCaption)
-            document.querySelector('#caption').classList.remove('supercaption');
+function nextDataset(map, datasetNo, removeFirst) {
+    // Invisibly load dataset into the map.
+    function delay(f, ms) {
+        window.setTimeout(() => !window.stopped && f(), ms);
     }
 
     _datasetNo = datasetNo;
     let d = datasets[datasetNo], 
         nextD = datasets[(datasetNo + 1) % datasets.length];
 
+    if (removeFirst)
+        removeDataset(map, datasets[(datasetNo - 1 + datasets.length) % datasets.length]);
+
     // if for some reason this dataset hasn't already been loaded.
-    if (!d.layerId || !map.getLayer(d.layerId) /* this second test shouldn't be needed...*/) {
-        preloadDataset(d);
+    if (!d._layerId) {
+        preloadDataset(map, d);
     }
-    reveal(d);
+    if (d._layerId && !map.getLayer(d._layerId))
+        throw 'Help: Layer not loaded: ' + d._layerId;
+    revealDataset(map, d);
         
 
     // load, but don't show, next one. // Comment out the next line to not do the pre-loading thing.
     // we want to skip "datasets" that are just captions etc.
     let nextRealDatasetNo = (datasetNo + 1) % datasets.length;
-    while (!datasets[nextRealDatasetNo].dataset && !datasets[nextRealDatasetNo].mapbox)
-        nextRealDatasetNo = (nextRealDatasetNo + 1) % datasets.length;        
-
-    preloadDataset(datasets[nextRealDatasetNo]);
+    while (datasets[nextRealDatasetNo] && !datasets[nextRealDatasetNo].dataset && !datasets[nextRealDatasetNo].mapbox && nextRealDatasetNo < datasets.length)
+        nextRealDatasetNo ++;
+    if (datasets[nextRealDatasetNo])
+        preloadDataset(map, datasets[nextRealDatasetNo]);
 
     if (d.showLegend) {
         document.querySelector('#legends').style.display = 'block';
@@ -304,29 +325,18 @@ function nextDataset(map, datasetNo) {
         map.flyTo(d.flyTo, { source: 'nextDataset'});
     }
     
-    if (nextD.flyTo && !window.stopped) {
+    if (nextD.flyTo) {
         // got to be careful if the data overrides this,
-        nextD.flyTo.duration = def(nextD.flyTo.duration, d.delay/3.0 + nextD.delay/3.0);// so it lands about a third of the way through the dataset's visibility.
-        setTimeout(() => {
-            map.flyTo(nextD.flyTo, { source: 'nextDataset'});
-        }, d.delay * 2.0/3.0);
+        nextD.flyTo.duration = def(nextD.flyTo.duration, d.delay/3 + nextD.delay/3);// so it lands about a third of the way through the dataset's visibility.
+        delay(() => map.flyTo(nextD.flyTo, { source: 'nextDataset'}), d.delay * 2/3);
     }
 
-    setTimeout(() => {
-        removeDataset(d);
-
-
-        
-    }, d.delay + def(d.linger, 0)); // optional "linger" time allows overlap. Not generally needed since we implemented preloading.
+    delay(() => removeDataset(map, d), d.delay + def(d.linger, 0)); // optional "linger" time allows overlap. Not generally needed since we implemented preloading.
     
-    if (!window.stopped) {
-        setTimeout(() => {
-            nextDataset(map, (datasetNo + 1) % datasets.length);
-        }, d.delay );
-    }
+    delay(() => nextDataset(map, (datasetNo + 1) % datasets.length), d.delay );
 }
 
-/* Pre download all datasets in the loop */
+/* Pre download all non-mapbox datasets in the loop */
 function loadDatasets(map) {
     return Promise
         .all(datasets.map(d => { 
@@ -335,8 +345,6 @@ function loadDatasets(map) {
                 return d.dataset.load();
             } else
                 return Promise.resolve();
-                // style isn't done loading so we can't add sources. not sure it will actually trigger downloading anyway.
-                //return Promise.resolve (addMapboxDataset(map, d));
         })).then(() => datasets[0].dataset);
 }
 
@@ -395,10 +403,21 @@ function loadOneDataset() {
     });*/
     document.querySelector('body').addEventListener('keydown', e=> {
         //console.log(e.keyCode);
-        if (e.keyCode === 190 || e.keyCode === 188 && demoMode) {
+        // , and . stop the animation and advance forward/back
+        if ([190, 188].indexOf(e.keyCode) > -1 && demoMode) {
             map.stop();
             window.stopped = true;
-            nextDataset(map, (_datasetNo + {190: 1, 188: -1}[e.keyCode]) % datasets.length);
+            removeDataset(map, datasets[_datasetNo]);
+            nextDataset(map, (_datasetNo + {190: 1, 188: -1}[e.keyCode] + datasets.length) % datasets.length);
+        } else if (e.keyCode === 32 && demoMode) {
+            // Space = start/stop
+            window.stopped = !window.stopped;
+            if (window.stopped)
+                map.stop();
+            else {
+                removeDataset(map, datasets[_datasetNo]);
+                nextDataset(map, _datasetNo);
+            }
         }
     });
 
@@ -411,20 +430,12 @@ function loadOneDataset() {
         whenMapLoaded(map, () => {
 
             if (demoMode) {
-                nextDataset(map, 0);
+                nextDataset(map, 28); // which dataset to start at. (0 for prod)
+                //var fp = new FlightPath(map);
             } else {
                 showDataset(map, dataset);
-                // would be nice to support loading mapbox datasets but
-                // it's a faff to guess how to style it
-                //if (dataset.match(/....-..../))
-                //else
-
             }
-            document.querySelectorAll('#loading')[0].outerHTML='';
-
-            if (demoMode) {
-                //var fp = new FlightPath(map);
-            }
+            document.querySelector('#loading').outerHTML='';
         });
         
 

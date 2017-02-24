@@ -144,6 +144,14 @@ Stretch goals
 
 */
 
+
+const CoM = {
+    blue: 'rgb(0,174,203)',
+    magenta:'rgb(227, 4, 80)',
+    green: 'rgb(0,183,79)'
+};
+CoM.enumColors = [CoM.blue, CoM.magenta, CoM.green];
+
 import { SourceData } from './sourceData';
 
 export const datasets = [
@@ -170,6 +178,7 @@ export const datasets = [
         delay:1000,
         name: 'Property boundaries',
         caption: 'We have data like property boundaries for planning',
+        opacity: 1,
         mapbox: {
             id: 'boundaries-1',
             type: 'line',
@@ -197,6 +206,7 @@ export const datasets = [
         linger:3000,
         name: 'Property boundaries',
         caption: 'We have data like property boundaries for planning',
+        opacity:1,
         mapbox: {
             id: 'boundaries-2',
             type: 'line',
@@ -366,13 +376,20 @@ export const datasets = [
         //flyTo: {"center":{"lng":144.94318163755105,"lat":-37.78351953419449},"zoom":15.773488574721082,"bearing":147.65219382373107,"pitch":59.99589825769096}
     },
 
+    {
+        delay:5000,
+        caption:'Census of Land Use and Employment (CLUE)',
+        superCaption: true,
+        paint:[],
+        name:''
+    },
 
     
     {
         delay: 10000, 
         dataset: new SourceData('b36j-kiy4'), 
         column: 'Total employment in block' ,
-        caption: 'The Census of Land Use and Employment (CLUE) reveals where employment is concentrated',
+        caption: 'CLUE reveals where employment is concentrated',
         flyTo: {"center":{"lng":144.9267253147857,"lat":-37.804385949276494},"zoom":13.88628732015981,"bearing":119.78868682882374,"pitch":60}
         //flyTo: {"center":{"lng":144.9598533456214,"lat":-37.83581916243661},"zoom":13.649116614872836,"bearing":0,"pitch":45}
     },
@@ -402,14 +419,22 @@ export const datasets = [
         caption: 'and where the healthcare and social assistance organisations are based.',
         flyTo:{"center":{"lng":144.9572331121853,"lat":-37.82706374763824},"zoom":13.063757386232242,"bearing":26.37478691852334,"pitch":60}
     },
+    {
+        delay:5000,
+        caption:'Development Activity Monitor (DAM)',
+        superCaption: true,
+        paint:[],
+        name:''
+    },
 
     { 
         delay: 7000, 
         linger:9000,
         dataset: new SourceData('gh7s-qda8'), 
         column: 'status', 
+        options: { enumColors: CoM.enumColors},
         filter: [ '==', 'status', 'APPLIED' ], 
-        caption: 'Development Activity Monitor tracks major projects in the planning stage...',
+        caption: 'DAM tracks major projects in the planning stage...',
         flyTo: {"center":{"lng":144.96354379775335,"lat":-37.82595306646476},"zoom":14.665437375740426,"bearing":0,"pitch":59.5}
 
     }, 
@@ -418,7 +443,8 @@ export const datasets = [
         delay: 4000,
         linger:5000, 
         dataset: new SourceData('gh7s-qda8'), 
-        column: 'status', 
+        options: { enumColors: CoM.enumColors},
+        column: 'status',         
         filter: [ '==', 'status', 'UNDER CONSTRUCTION' ], 
         caption: '...projects under construction',
         flyTo: {"center":{"lng":144.96354379775335,"lat":-37.82595306646476},"zoom":14.665437375740426,"bearing":0,"pitch":59.5}
@@ -427,6 +453,7 @@ export const datasets = [
     { 
         delay: 5000, 
         dataset: new SourceData('gh7s-qda8'), 
+        options: { enumColors: CoM.enumColors},
         column: 'status', 
         filter: [ '==', 'status', 'COMPLETED' ], 
         caption: '...and those already completed.',
@@ -462,7 +489,7 @@ export const datasets = [
 
 
     { 
-        delay:0,
+        delay:1,
         name: 'Garbage collection zones',
         caption: 'Which night is bin night?',
         mapbox: {
@@ -475,8 +502,8 @@ export const datasets = [
                 'line-color': 'hsl(23, 94%, 64%)',
                 'line-width': {
                     stops: [
-                        [13, 1],
-                        [16, 3]
+                        [13, 6],
+                        [16, 10]
                     ]
                 }
 
@@ -492,7 +519,7 @@ export const datasets = [
 
 
 
-/*    { 
+    { 
         delay:10000,
         name: 'Garbage collection zones',
         caption: 'Which night is bin night',
@@ -509,15 +536,15 @@ export const datasets = [
                 'text-field': '{rub_day}',
                 'text-size': {
                     stops: [
-                        [13, 14],
-                        [16, 16]
+                        [13, 18],
+                        [16, 20]
                     ]
                 }
             },
         }
         // birds eye
         //flyTo: {"center": {lng:144.953086,lat:-37.807509},zoom:14,bearing:0,pitch:0, duration:10000},
-    },*/
+    },
 
 
     { 
@@ -531,6 +558,11 @@ export const datasets = [
                 layout: {
                     'icon-image': 'bicycle-share-15',
                     'icon-allow-overlap': true,
+                    'icon-size': 2,
+                    'text-field': '{NBBikes}',
+                    //'text-allow-overlap': true,
+                    'text-offset': [1.5,0],
+                    'text-size':20
                     // for some reason it gets silently rejected with this:
                     /*'icon-size': {
                         property: 'NBBikes',
@@ -541,6 +573,10 @@ export const datasets = [
 
                         ]
                     }*/
+                },
+                paint: {
+                    'text-color':'hsl(239,71%,66%)' // match the blue bike icons
+                    //'text-color': 'rgb(0,174,203)' // CoM pop blue
                 }
             }
         },
@@ -553,6 +589,7 @@ export const datasets = [
         filter: ['==', 'WEDDING', 'Y'],
         column: 'WEDDING',
         delay: 4000,
+        opacity: 0.8,
         flyTo: {"center":{"lng":144.9736255669336,"lat":-37.81396271334432},"zoom":14.405591091671058,"bearing":-67.19999999999999,"pitch":54.00000000000002}
     },
     {
@@ -560,6 +597,7 @@ export const datasets = [
         caption: 'Places you can book for a wedding...or something else.',
         column: 'WEDDING',
         delay: 6000,
+        opacity: 0.8,
         flyTo: {"center":{"lng":144.9736255669336,"lat":-37.81396271334432},"zoom":14.405591091671058,"bearing":-80,"pitch":54.00000000000002}
     },
     {
@@ -613,7 +651,7 @@ export const datasets = [
     },
     {
         delay: 10000,
-        linger: 5000,
+        
         caption: 'Our data tells you where your dog doesn\'t need a leash',
         name: 'Dog Walking Zones',
         mapbox: {
@@ -627,7 +665,8 @@ export const datasets = [
             },
             filter: ['==', 'status', 'offleash']
         },
-        flyTo: {"center":{"lng":144.96472084161525,"lat":-37.79947747257584},"zoom":14.933931528036048,"bearing":-57.64132745183708,"pitch":60}
+        flyTo: {"center":{"lng":144.95746092528066,"lat":-37.79450697427422},"zoom":14.955544903145544,"bearing":-44.84132745183728,"pitch":60}
+        //flyTo: {"center":{"lng":144.96472084161525,"lat":-37.79947747257584},"zoom":14.933931528036048,"bearing":-57.64132745183708,"pitch":60}
         //flyTo:{"center":{"lng":144.98613987732932,"lat":-37.83888266596187},"zoom":15.096419579432878,"bearing":-30,"pitch":57.49999999999999}
     },
 
@@ -653,18 +692,25 @@ export const datasets = [
     
     {
         delay:2000,
-        linger:10000,
+        linger:20000,
         caption: 'What will <b><i>you</i></b> do with our data?',
         name: 'Building outlines',
-        opacity:0.6,
+        opacity:0.1,
         mapbox: {
             id: 'buildings',
             type: 'fill-extrusion',
             source: 'mapbox://cityofmelbourne.052wfh9y',
             'source-layer': 'Building_outlines-0mm7az',
             paint: {
-                'fill-extrusion-color': 'hsl(146, 100%, 20%)',
-                'fill-extrusion-opacity': 0.6,
+                'fill-extrusion-color': {
+                    property: 'height',
+                    stops: [
+                        [0, 'hsl(146, 50%, 10%)'],
+                        [200, 'hsl(146, 100%, 60%)']
+                    ],
+                },
+                    //'hsl(146, 100%, 20%)',
+                
                 'fill-extrusion-height': {
                     'property':'height',
                     type: 'identity'
@@ -678,11 +724,29 @@ export const datasets = [
         //flyTo: {"center":{"lng":144.9470140753445,"lat":-37.81520062726666},"zoom":15.458784930238672,"bearing":98.39999999999988,"pitch":60}
     },
     {
-        delay:40000,
+        delay:2000,
+        paint: [ ['buildings', 'fill-extrusion-opacity', 0.3]],
+        keepPaint: true,
+        flyTo:{center:{lng:144.95,lat:-37.813},bearing:0,zoom:14,pitch:45,duration:20000}
+    },
+    {
+        delay:2000,
+        keepPaint: true,
+        paint: [ ['buildings', 'fill-extrusion-opacity', 0.5] ]
+    },
+    {
+        delay:2000,
+        keepPaint: true,
+        paint: [ ['buildings', 'fill-extrusion-opacity', 0.6] ]
+    },
+    {
+        delay:20000,
         caption: 'What will <b><i>you</i></b> do with our data?',
         name: 'Building outlines',
-        opacity:0.6,
-        mapbox: {
+        //opacity:0.6,
+        keepPaint: true,
+        paint: [ ['buildings', 'fill-extrusion-opacity', 0.7] ],
+        /*mapbox: {
             id: 'buildings',
             type: 'fill-extrusion',
             source: 'mapbox://cityofmelbourne.052wfh9y',
@@ -696,15 +760,16 @@ export const datasets = [
                 }
             }
 
-        },
+        },*/
         //matching starting position?
-        flyTo:{center:{lng:144.95,lat:-37.813},bearing:0,zoom:15,pitch:45,duration:20000}
+        flyTo:{center:{lng:144.95,lat:-37.813},bearing:0,zoom:14,pitch:45,duration:20000}
         // from abbotsfordish
         //flyTo:{"center":{"lng":144.9725135032764,"lat":-37.807415209051285},"zoom":14.896259153012243,"bearing":-106.40000000000015,"pitch":60}
         //from south
         //flyTo: {"center":{"lng":144.9470140753445,"lat":-37.81520062726666},"zoom":15.458784930238672,"bearing":98.39999999999988,"pitch":60}
     }
 ];
+/*
 const crappyFinale = [
     //////////////////////////////////
     // Ze grande finale
@@ -769,6 +834,7 @@ const crappyFinale = [
     {
         caption: 'What will <u>you</u>&nbsp; do with our data?',
         delay:20000,
+        linger:30000,
         opacity:0.4,
         mapbox: {
             id: 'buildings',
@@ -788,6 +854,7 @@ const crappyFinale = [
     },
 
 ];
+*/
 
 const unused = [
 {
