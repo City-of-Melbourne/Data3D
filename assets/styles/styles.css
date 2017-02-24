@@ -493,7 +493,7 @@ body {
   overflow: hidden; }
 
 #caption, #footer {
-  position: relative;
+  position: absolute;
   width: 100%;
   margin: 0 auto; }
 
@@ -507,7 +507,7 @@ body {
   width: 100%; }
 
 #caption {
-  top: 1em;
+  bottom: 100px;
   padding: 1em;
   /*    
     @if $scheme == 'light' {
@@ -518,7 +518,20 @@ body {
     }
     */
   background: transparent;
-  margin-left: 0; }
+  margin-left: 0;
+  transition: min-height 2s;
+  min-height: 3em; }
+
+#caption.supercaption {
+  min-height: 15em;
+  height: 15em;
+  background: rgba(0, 0, 0, 0.5);
+  top: calc(50vh - 7.5em); }
+
+#caption.supercaption h1 {
+  background: transparent;
+  margin-top: auto;
+  margin-bottom: auto; }
 
 #footer .dataset {
   color: #eee;
@@ -553,6 +566,7 @@ body {
     */ }
 
 #logo {
+  display: none;
   background-image: url(../images/com-masterlogo.svg);
   width: 140px;
   height: 40px;
