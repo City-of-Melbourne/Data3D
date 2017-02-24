@@ -692,7 +692,7 @@ export const datasets = [
     
     {
         delay:2000,
-        linger:20000,
+        linger:26000,
         caption: 'What will <b><i>you</i></b> do with our data?',
         name: 'Building outlines',
         opacity:0.1,

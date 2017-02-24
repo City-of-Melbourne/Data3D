@@ -262,7 +262,7 @@ function removeDataset(map, d) {
     if (d.mapbox)
         map.removeLayer(d.mapbox.id);
 
-    if (d.paint) // restore paint settings before they were messed up
+    if (d.paint && !d.keepPaint) // restore paint settings before they were messed up
         d._oldPaint.forEach(paint => {
             map.setPaintProperty(paint[0], paint[1], paint[2]);
         });
