@@ -207,16 +207,13 @@ function showMapboxDataset(map, dataset, invisible) {
             //dataset.mapbox
         style = clone(dataset.mapbox);
         if (invisible) {
-            //getOpacityProps(style).forEach(prop => style.paint[prop] = 0);
-            style.layout.visibility = 'none';
+            getOpacityProps(style).forEach(prop => style.paint[prop] = 0);
             
         }
         map.addLayer(style);
     } else if (!invisible){
-        /*getOpacityProps(style).forEach(prop =>
+        getOpacityProps(style).forEach(prop =>
             map.setPaintProperty(dataset.mapbox.id, prop, def(dataset.opacity,0.9)));
-            */
-        style.layout.visibility = 'visible';
     }
     dataset._layerId = dataset.mapbox.id;
 
@@ -241,9 +238,8 @@ function revealDataset(map, d) {
     console.log('Reveal: ' + d.caption  + ` (${_datasetNo})`);
     // TODO change 0.9 to something specific for each type
     if (d.mapbox || d.dataset) {
-        map.setLayoutProperty(d._layerId, 'visibility', 'visible');
-        //getOpacityProps(map.getLayer(d._layerId)).forEach(prop =>
-        //    map.setPaintProperty(d._layerId, prop, def(d.opacity, 0.9)));
+        getOpacityProps(map.getLayer(d._layerId)).forEach(prop =>
+            map.setPaintProperty(d._layerId, prop, def(d.opacity, 0.9)));
     } else if (d.paint) {
         d._oldPaint = [];
         d.paint.forEach(paint => {

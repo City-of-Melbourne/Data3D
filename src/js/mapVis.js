@@ -259,11 +259,10 @@ function circleLayer(sourceId, layerId, filter, highlight, size, invisible) {
         id: layerId,
         type: 'circle',
         source: sourceId,
-        layout: { visibility: invisible ? 'none' : 'visible' },
         paint: {
 //            'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
             'circle-color': highlight ? 'rgba(0,0,0,0)' : 'hsl(220,80%,50%)',
-            //'circle-opacity': !invisible ? 0.95 : 0,
+            'circle-opacity': !invisible ? 0.95 : 0,
             'circle-stroke-color': highlight ? 'white' : 'rgba(50,50,50,0.5)',
             'circle-stroke-width': 1,
             'circle-radius': {
@@ -285,19 +284,18 @@ function symbolLayer(sourceId, layerId, symbol, filter, highlight, invisible) {
     let ret = {
         id: layerId,
         type: 'symbol',
-        source: sourceId,
-        layout: { visibility: invisible ? 'none' : 'visible' }
+        source: sourceId
     };
     if (filter)
         ret.filter = filter;
 
     ret.paint = def(symbol.paint, {});
-    //ret.paint['icon-opacity'] = !invisible ? 0.95 : 0;
+    ret.paint['icon-opacity'] = !invisible ? 0.95 : 0;
 
     //ret.layout = def(symbol.layout, {});
     if (symbol.layout) {
-        //if (symbol.layout['text-field'] && invisible)
-        //    ret.paint['text-opacity'] = 0;
+        if (symbol.layout['text-field'] && invisible)
+            ret.paint['text-opacity'] = 0;
         ret.layout = symbol.layout;
     }
 
@@ -314,11 +312,10 @@ function symbolLayer(sourceId, layerId, symbol, filter, highlight, invisible) {
         source: sourceId,
         'source-layer': 'Blocks_for_Census_of_Land_Use-7yj9vh', // TODo argument?
         paint: { 
-        //     'fill-extrusion-opacity': !invisible ? 0.8 : 0,
+             'fill-extrusion-opacity': !invisible ? 0.8 : 0,
              'fill-extrusion-height': 0,
              'fill-extrusion-color': '#003'
          },
-         layout: { visibility: invisible ? 'none' : 'visible' }
     };
 }
  function polygonHighlightLayer(sourceId, layerId) {
