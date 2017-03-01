@@ -263,6 +263,7 @@ function circleLayer(sourceId, layerId, filter, highlight, size, invisible) {
 //            'circle-color': highlight ? 'hsl(20, 95%, 50%)' : 'hsl(220,80%,50%)',
             'circle-color': highlight ? 'rgba(0,0,0,0)' : 'hsl(220,80%,50%)',
             'circle-opacity': !invisible ? 0.95 : 0,
+            'circle-stroke-opacity': !invisible ? 0.95 : 0,
             'circle-stroke-color': highlight ? 'white' : 'rgba(50,50,50,0.5)',
             'circle-stroke-width': 1,
             'circle-radius': {
