@@ -33,10 +33,13 @@ const opacityProp = {
         };
 
 // returns a value like 'circle-opacity', for a given layer style.
+// D'oh! We could just use the `visibility` layout setting for each layer. D'oh.
 function getOpacityProps(layer) {
     let ret = [opacityProp[layer.type]];
     if (layer.layout && layer.layout['text-field'])
         ret.push('text-opacity');
+    if (layer.paint && layer.paint['circle-stroke-color'])
+        ret.push('circle-stroke-opacity');
     
     return ret;
 }
@@ -244,12 +247,11 @@ function revealDataset(map, d) {
             map.setPaintProperty(paint[0], paint[1], paint[2]);
         });
     }
-    if (d.caption) {
-        showCaption(d.name, undefined, d.caption);
-    } else if (d.dataset) {
+    if (d.dataset) {
         showCaption(d.dataset.name, d.dataset.dataId, d.caption);
+    } else  if (d.caption) {
+        showCaption(d.name, undefined, d.caption);
     }
-
     if (d.superCaption)
         document.querySelector('#caption').classList.add('supercaption');
 }
@@ -430,7 +432,7 @@ function loadOneDataset() {
         whenMapLoaded(map, () => {
 
             if (demoMode) {
-                nextDataset(map, 28); // which dataset to start at. (0 for prod)
+                nextDataset(map, 12); // which dataset to start at. (0 for prod)
                 //var fp = new FlightPath(map);
             } else {
                 showDataset(map, dataset);
