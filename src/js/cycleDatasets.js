@@ -497,6 +497,10 @@ export const datasets = [
             type: 'line',
             source: 'mapbox://cityofmelbourne.8arqwmhr',
             'source-layer': 'Garbage_collection_zones-9nytsk',
+            layout: {
+                'line-join': 'round',
+                
+            },
             paint: {
                 
                 'line-color': 'hsl(23, 94%, 64%)',
@@ -522,7 +526,7 @@ export const datasets = [
     { 
         delay:10000,
         name: 'Garbage collection zones',
-        caption: 'Which night is bin night',
+        caption: 'Which night is bin night?',
         mapbox: {
             id: 'garbage-2',
             type: 'symbol',

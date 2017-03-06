@@ -400,9 +400,11 @@ function loadOneDataset() {
             pitch: map.getPitch()
         });
     });
-    /*map.on('error', e => {
-        console.error(e);
-    });*/
+    map.on('error', e => {
+        // Hide those annoying non-error errors
+        if (e && e.error !== 'Error: Not Found')
+            console.error(e);
+    });
     document.querySelector('body').addEventListener('keydown', e=> {
         //console.log(e.keyCode);
         // , and . stop the animation and advance forward/back
@@ -432,7 +434,7 @@ function loadOneDataset() {
         whenMapLoaded(map, () => {
 
             if (demoMode) {
-                nextDataset(map, 12); // which dataset to start at. (0 for prod)
+                nextDataset(map, 0); // which dataset to start at. (0 for prod)
                 //var fp = new FlightPath(map);
             } else {
                 showDataset(map, dataset);
