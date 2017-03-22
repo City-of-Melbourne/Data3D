@@ -18,6 +18,28 @@ function whenLoaded(map, f) {
 
 let def = (a, b) => a !== undefined ? a : b;
 
+function spinMore(map) {
+    const lapTime = 60; // time in seconds for one complete revolution. Slow is good!
+    map.rotateTo((map.getBearing() + 45) % 360, {
+        easing: t => t,
+        duration: lapTime / (360 / 45) * 1000
+    }, { source: 'spin' });
+
+}
+
+export function spin(map) {
+    spinMore(map);
+
+    if (!map._spinning) {
+        map._spinning = true; // ok it's hacky but I seriously couldn't think of another way to make sure we only do this once.
+        map.on('moveend', e => {
+            if (e.source === 'spin') {
+                spinMore(map);
+            }
+        });
+    }
+}
+
 export class FlightPath {
 
     constructor(map, route) {

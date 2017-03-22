@@ -3,6 +3,7 @@
 //var mapboxgl = require('mapbox-gl');
 import { SourceData } from './sourceData';
 import { FlightPath } from './flightPath';
+import { spin } from './flightPath';
 import { datasets } from './cycleDatasets';
 import { MapVis } from './mapVis';
 console.log(datasets);
@@ -33,7 +34,7 @@ const opacityProp = {
         };
 
 // returns a value like 'circle-opacity', for a given layer style.
-// D'oh! We could just use the `visibility` layout setting for each layer. D'oh.
+// Can't just use 'visibility' prop, because when a layer is invisible it doesn't preload.
 function getOpacityProps(layer) {
     let ret = [opacityProp[layer.type]];
     if (layer.layout && layer.layout['text-field'])
@@ -92,16 +93,14 @@ var lastFeature;
 
 
 function chooseDataset() {
-    if (window.location.hash) {
-        return window.location.hash.replace('#','');
-    }
 
     // known CLUE block datasets that work ok
     var clueChoices = [
         'b36j-kiy4', // employment
         '234q-gg83', // floor space by use by block
         'c3gt-hrz6' // business establishments -- this one is complete, the others have gappy data for confidentiality
-    ];
+    ]; 
+
 
     // known point datasets that work ok
     var pointChoices = [
@@ -338,44 +337,29 @@ function nextDataset(map, datasetNo, removeFirst) {
     delay(() => nextDataset(map, (datasetNo + 1) % datasets.length), d.delay );
 }
 
-/* Pre download all non-mapbox datasets in the loop */
-function loadDatasets(map) {
-    return Promise
-        .all(datasets.map(d => { 
-            if (d.dataset) {
-                console.log('Loading dataset ' + d.dataset.dataId);
-                return d.dataset.load();
-            } else
-                return Promise.resolve();
-        })).then(() => datasets[0].dataset);
+function listenForKeystrokes(map, options) {
+    document.querySelector('body').addEventListener('keydown', e=> {
+        //console.log(e.keyCode);
+        // , and . stop the animation and advance forward/back
+        if ([190, 188].indexOf(e.keyCode) > -1 && options.demoMode) {
+            map.stop();
+            window.stopped = true;
+            removeDataset(map, datasets[_datasetNo]);
+            nextDataset(map, (_datasetNo + {190: 1, 188: -1}[e.keyCode] + datasets.length) % datasets.length);
+        } else if (e.keyCode === 32 && options.demoMode) {
+            // Space = start/stop
+            window.stopped = !window.stopped;
+            if (window.stopped)
+                map.stop();
+            else {
+                removeDataset(map, datasets[_datasetNo]);
+                nextDataset(map, _datasetNo);
+            }
+        }
+    });
 }
 
-function loadOneDataset() {
-    let dataset = chooseDataset();
-    return new SourceData(dataset).load();
-    /*if (dataset.match(/....-..../))
-        
-    else
-        return Promise.resolve(true);*/
-}
-
-(function start() {
-    
-    try {
-        document.documentElement.requestFullscreen();
-    } catch (e) {
-    }
-
-
-    let demoMode = window.location.hash === '#demo';
-    if (demoMode) {
-        // if we did this after the map was loading, call map.resize();
-        document.querySelector('#features').style.display = 'none';        
-        document.querySelector('#legends').style.display = 'none';
-        // For people who want the script.        
-        window.captions = datasets.map(d => `${d.caption} (${d.delay / 1000}s)`).join('\n');
-    }
-
+function setupMap(options) {
     let map = new mapboxgl.Map({
         container: 'map',
         //style: 'mapbox://styles/mapbox/dark-v9',
@@ -389,10 +373,11 @@ function loadOneDataset() {
     //map.once('load', () => tweakBasemap(map));
     //map.once('load',() => tweakPlaceLabels(map,true));
     //setTimeout(()=>tweakPlaceLabels(map, false), 8000);
+    
     map.on('moveend', (e,data)=> {
         if (e.source === 'nextDataset')
             return;
-
+        // When we manually position the map, dump the location to console - makes it easy to create tours.
         console.log({
             center: map.getCenter(),
             zoom: map.getZoom(),
@@ -405,39 +390,102 @@ function loadOneDataset() {
         if (e && e.error !== 'Error: Not Found')
             console.error(e);
     });
-    document.querySelector('body').addEventListener('keydown', e=> {
-        //console.log(e.keyCode);
-        // , and . stop the animation and advance forward/back
-        if ([190, 188].indexOf(e.keyCode) > -1 && demoMode) {
-            map.stop();
-            window.stopped = true;
-            removeDataset(map, datasets[_datasetNo]);
-            nextDataset(map, (_datasetNo + {190: 1, 188: -1}[e.keyCode] + datasets.length) % datasets.length);
-        } else if (e.keyCode === 32 && demoMode) {
-            // Space = start/stop
-            window.stopped = !window.stopped;
-            if (window.stopped)
-                map.stop();
-            else {
-                removeDataset(map, datasets[_datasetNo]);
-                nextDataset(map, _datasetNo);
+    listenForKeystrokes(map, options);
+    if (options.spin)
+        spin(map);
+    return map;
+}
+
+/* Pre download all non-mapbox datasets in the loop */
+// also get rid of the sidebar. :)
+function loadDatasets(map) {
+    // if we did this after the map was loading, call map.resize();
+    document.querySelector('#features').style.display = 'none';        
+    document.querySelector('#legends').style.display = 'none';
+    // For people who want the "script".        
+    window.captions = datasets.map(d => `${d.caption} (${d.delay / 1000}s)`).join('\n');
+
+
+    return Promise
+        .all(datasets.map(d => { 
+            if (d.dataset) {
+                console.log('Loading dataset ' + d.dataset.dataId);
+                return d.dataset.load();
+            } else
+                return Promise.resolve();
+        })).then(() => datasets[0].dataset);
+}
+
+function loadOneDataset(dataset) {
+    return new SourceData(dataset).load();
+    /*if (dataset.match(/....-..../))
+        
+    else
+        return Promise.resolve(true);*/
+}
+
+/*
+
+URL structures:
+
+/                   pick a random dataset
+/#demo              non-interactive mode, run a whole showcase
+/#abcd-1234         load a particular socrata ID
+/#snthosuntaheoeut  load a Mapbox tileset ID
+/#....&logo
+/#....&spin
+
+
+*/
+// list tilesets: sk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXp4cWp4bXgwMXpqMzJxcXc5emFhYjF5In0.1inqcZNJu-Z4PQlUTQ-GRw
+// https://api.mapbox.com/tilesets/v1/stevage?access_token=sk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXp4cWp4bXgwMXpqMzJxcXc5emFhYjF5In0.1inqcZNJu-Z4PQlUTQ-GRw
+function parseUrl() {
+    let options = {};
+    let hash = window.location.hash;
+    if (hash === '#demo') {
+        options.demoMode = true;
+    } else if (hash) {
+        // ### replace with more selective RE
+        options.dataset = def(hash.match(/#([a-zA-Z0-9]{4}-[a-zA-Z0-9]{4})/), [])[1];
+        options.spin = /&spin/.test(hash);
+        options.mapboxId = def(hash.match(/(mapbox:\/\/[a-zA-Z0-9]+\.[a-zA-Z0-9]+), [])[1];
+        if (options.mapboxId) {
+            options.mapboxDataset = {
+                id: 'mapbox-points',
+                type: 'circle',
+                source: options.mapbox
+
             }
         }
-    });
+    }
+    return options;
+}
 
-    (demoMode ? loadDatasets(map) : loadOneDataset())
-    .then(dataset => {
+(function start() {
+    try { document.documentElement.requestFullscreen(); } catch (e) { } // probably does nothing.
+
+    let p, options = parseUrl();
+    if (options.demoMode) {
+        p = loadDatasets(map);
+    } else {
+        if (!options.dataset)
+            options.dataset = chooseDataset();
+        p = loadOneDataset(options.dataset);
+    }
+    let map = setupMap(options);
+    p.then(dataset => {
         window.scrollTo(0,1); // does this hide the address bar? Nope    
         if (dataset) 
             showCaption(dataset.name, dataset.dataId);
 
         whenMapLoaded(map, () => {
 
-            if (demoMode) {
-                nextDataset(map, 0); // which dataset to start at. (0 for prod)
+            if (options.demoMode) {
+                // start the cycle of datasets (0 = first dataset)
+                nextDataset(map, 0); 
                 //var fp = new FlightPath(map);
             } else {
-                showDataset(map, dataset);
+                showDataset(map, dataset); // just show one dataset.
             }
             document.querySelector('#loading').outerHTML='';
         });
