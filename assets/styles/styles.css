@@ -503,11 +503,17 @@ body {
 
 #footer {
   position: absolute;
-  bottom: 34px;
-  width: 100%; }
+  bottom: 30px;
+  width: calc(100% - 2em);
+  padding-bottom: 0.5em;
+  background: rgba(0, 0, 0, 0.5);
+  margin: 1em; }
+
+#footer * {
+  background: none; }
 
 #caption {
-  bottom: 100px;
+  bottom: 70px;
   padding: 1em;
   /*    
     @if $scheme == 'light' {
