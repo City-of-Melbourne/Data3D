@@ -74,15 +74,23 @@ body {
 
 #footer {
     position: absolute;
-    bottom: 34px;
-    width:100%;
+    bottom: 30px;
+    width:calc(100% - 2em); // minus the margin on each side
+    padding-bottom:0.5em;
+
+    background: hsla(0, 0%, 0%, 0.5);
+    margin:1em;
+}
+
+#footer * {
+    background: none;
 }
 
 $captionwidth: 800px;
 
 #caption {
     //top: 1em;
-    bottom: 100px;
+    bottom: 70px;
     padding:1em;
     //border: 1px solid lightgray;
     /*    

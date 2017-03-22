@@ -440,15 +440,21 @@ URL structures:
 // list tilesets: sk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXp4cWp4bXgwMXpqMzJxcXc5emFhYjF5In0.1inqcZNJu-Z4PQlUTQ-GRw
 // https://api.mapbox.com/tilesets/v1/stevage?access_token=sk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXp4cWp4bXgwMXpqMzJxcXc5emFhYjF5In0.1inqcZNJu-Z4PQlUTQ-GRw
 function parseUrl() {
+    function getRegexPart(hash, regex, part) {
+        return def(hash.match(regex), [])[part + 1];
+    }
     let options = {};
     let hash = window.location.hash;
-    if (hash === '#demo') {
+    if (hash.match('#demo')) {
         options.demoMode = true;
+        options.start = def(getRegexPart(hash, /&start=(\d+)/, 0), 0);
+        console.log(options.start);
+        
     } else if (hash) {
         // ### replace with more selective RE
         options.dataset = def(hash.match(/#([a-zA-Z0-9]{4}-[a-zA-Z0-9]{4})/), [])[1];
         options.spin = /&spin/.test(hash);
-        options.mapboxId = def(hash.match(/(mapbox:\/\/[a-zA-Z0-9]+\.[a-zA-Z0-9]+), [])[1];
+        /*options.mapboxId = def(hash.match(/(mapbox:\/\/[a-zA-Z0-9]+\.[a-zA-Z0-9]+), [])[1];
         if (options.mapboxId) {
             options.mapboxDataset = {
                 id: 'mapbox-points',
@@ -456,7 +462,7 @@ function parseUrl() {
                 source: options.mapbox
 
             }
-        }
+        }*/
     }
     return options;
 }
@@ -482,7 +488,7 @@ function parseUrl() {
 
             if (options.demoMode) {
                 // start the cycle of datasets (0 = first dataset)
-                nextDataset(map, 0); 
+                nextDataset(map, options.start); 
                 //var fp = new FlightPath(map);
             } else {
                 showDataset(map, dataset); // just show one dataset.

@@ -157,7 +157,7 @@ import { SourceData } from './sourceData';
 export const datasets = [
     {
         delay:5000,
-        caption:'Melbourne has a lot of data.',
+        caption:'Melbourne has a lot of data, ready for you to access and use through our Open Data Platform.',
         superCaption: true,
         paint:[],
         name:''
@@ -177,7 +177,7 @@ export const datasets = [
     { 
         delay:1000,
         name: 'Property boundaries',
-        caption: 'We have data like property boundaries for planning',
+        caption: 'We have data about property boundaries that we use for planning',
         opacity: 1,
         mapbox: {
             id: 'boundaries-1',
@@ -205,7 +205,7 @@ export const datasets = [
         delay:10000,
         linger:3000,
         name: 'Property boundaries',
-        caption: 'We have data like property boundaries for planning',
+        caption: 'We have data about property boundaries that we use for planning',
         opacity:1,
         mapbox: {
             id: 'boundaries-2',
@@ -232,7 +232,7 @@ export const datasets = [
     { 
         delay:14000,
         name: 'Street addresses',
-        caption: 'As you\'d guess, we have data like every street address',
+        caption: 'And data about every street address.',
         // need to zoom in close on this one
         mapbox: {
             id: 'addresses',
@@ -288,7 +288,7 @@ export const datasets = [
 
     {
         delay: 10000,
-        caption: 'The Urban Forest contains every elm tree...',
+        caption: 'Our urban forest data contains every elm tree...',
         name: 'Trees, with species and dimensions (Urban Forest)',
         mapbox: {
             id: 'alltrees',            
@@ -389,7 +389,7 @@ export const datasets = [
         delay: 10000, 
         dataset: new SourceData('b36j-kiy4'), 
         column: 'Total employment in block' ,
-        caption: 'CLUE reveals where employment is concentrated',
+        caption: 'CLUE reveals our employment hot spots.',
         flyTo: {"center":{"lng":144.9267253147857,"lat":-37.804385949276494},"zoom":13.88628732015981,"bearing":119.78868682882374,"pitch":60}
         //flyTo: {"center":{"lng":144.9598533456214,"lat":-37.83581916243661},"zoom":13.649116614872836,"bearing":0,"pitch":45}
     },
@@ -553,7 +553,7 @@ export const datasets = [
 
     { 
         name: 'Melbourne Bike Share stations, with current number of free and used docks (every 15 minutes)',
-        caption: 'How many "Blue Bikes" are ready in each station.',
+        caption: 'How many bikes are available at each of our bike-share stations.',
         column: 'NBBikes',
         delay: 20000, 
         dataset: new SourceData('tdvh-n9dv') ,
@@ -656,7 +656,7 @@ export const datasets = [
     {
         delay: 10000,
         
-        caption: 'Our data tells you where your dog doesn\'t need a leash',
+        caption: 'Our data tells you where your dog can roam free.',
         name: 'Dog Walking Zones',
         mapbox: {
             id: '2',
@@ -697,7 +697,7 @@ export const datasets = [
     {
         delay:2000,
         linger:26000,
-        caption: 'What will <b><i>you</i></b> do with our data?',
+        caption: 'What will <b><i>you</i></b> do with our data?<br/>Find your next dataset at data.melbourne.vic.gov.au',
         name: 'Building outlines',
         opacity:0.1,
         mapbox: {
@@ -745,7 +745,7 @@ export const datasets = [
     },
     {
         delay:20000,
-        caption: 'What will <b><i>you</i></b> do with our data?',
+        caption: 'What will <b><i>you</i></b> do with our data?<br/>Find your next dataset at data.melbourne.vic.gov.au',
         name: 'Building outlines',
         //opacity:0.6,
         keepPaint: true,
