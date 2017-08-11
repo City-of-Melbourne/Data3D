@@ -11,7 +11,7 @@ counting field value frequencies etc.
 export class SourceData {
     constructor(dataId, activeCensusYear) {
         this.dataId = dataId;
-        this.activeCensusYear = def(activeCensusYear, 2015);
+        this.activeCensusYear = def(activeCensusYear, 2016);
 
         this.locationColumn = undefined;  // name of column which holds lat/lon or block ID
         this.locationIsPoint = undefined; // if the dataset type is 'point' (used for parsing location field)
@@ -82,7 +82,8 @@ export class SourceData {
 
     // convert numeric columns to numbers for data vis
     convertRow(row) {
-
+        //if (!filter(row))
+        //    return;
         // convert location types (string) to [lon, lat] array.
         function locationToCoords(location) {
             if (String(location).length === 0)
@@ -108,12 +109,13 @@ export class SourceData {
         // TODO use column.cachedContents.smallest and .largest
         this.numericColumns.forEach(col => {
             row[col] = Number(row[col]) ; // +row[col] apparently faster, but breaks on simple things like blank values
-            // we don't want to include the total values in 
-            if (row[col] < this.mins[col] && this.filter(row))
-                this.mins[col] = row[col];
+            if (this.filter(row)) {
+                if (row[col] < this.mins[col])
+                    this.mins[col] = row[col];
 
-            if (row[col] > this.maxs[col] && this.filter(row))
-                this.maxs[col] = row[col];
+                if (row[col] > this.maxs[col])
+                    this.maxs[col] = row[col];
+            }
         });
         this.textColumns.forEach(col => {
             var val = row[col];
@@ -133,7 +135,7 @@ export class SourceData {
         this.textColumns.forEach(col => {
             this.sortedFrequencies[col] = Object.keys(this.frequencies[col])
                 .sort((vala, valb) => this.frequencies[col][vala] < this.frequencies[col][valb] ? 1 : -1)
-                .slice(0,12);
+                .slice(0,12); // Take this many of the most frequent values to assign to colors.
 
             if (Object.keys(this.frequencies[col]).length < 2 || Object.keys(this.frequencies[col]).length > 20 && this.frequencies[col][this.sortedFrequencies[col][1]] <= 5) {
                 // It's boring if all values the same, or if too many different values (as judged by second-most common value being 5 times or fewer)
@@ -167,21 +169,21 @@ export class SourceData {
             }
         }).then(() => {
             try {
-            return d3.csv('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '/rows.csv?accessType=DOWNLOAD', this.convertRow.bind(this))
-            .then(rows => {
-                //console.log("Got rows for " + this.name);
-                this.rows = rows;
-                this.computeSortedFrequencies();
-                if (this.shape === 'polygon')
-                    this.computeBlockIndex();
-                return this;
-            })
-            .catch(e => {
-                console.error('Problem loading ' + this.name + '.');
-                console.error(e);
-            });
+                return d3.csv('https://data.melbourne.vic.gov.au/api/views/' + this.dataId + '/rows.csv?accessType=DOWNLOAD', this.convertRow.bind(this))
+                .then(rows => {
+                    //console.log("Got rows for " + this.name);
+                    this.rows = rows.filter(this.filter.bind(this)); // no idea why this bind step is needed for some datasets but not others
+                    this.computeSortedFrequencies();
+                    if (this.shape === 'polygon')
+                        this.computeBlockIndex();
+                    return this;
+                })
+                .catch(e => {
+                    console.error(`Problem loading #${this.dataId}, ${this.name}.`);
+                    console.error(e);
+                });
             } catch (e) {
-                console.error('Problem loading ' + this.name);
+                console.error('Problem loading ' + this.name + '!');
                 console.error(e);
             }
         });
@@ -191,9 +193,10 @@ export class SourceData {
     // Create a hash table lookup from [year, block ID] to dataset row
     computeBlockIndex() {
         this.rows.forEach((row, index) => {
-            if (this.blockIndex[row['Census year']] === undefined)
-                this.blockIndex[row['Census year']] = {};
-            this.blockIndex[row['Census year']][row['Block ID']] = index;
+            let year = row['Census year'];
+            if (this.blockIndex[year] === undefined)
+                this.blockIndex[year] = {};
+            this.blockIndex[year][row['Block ID']] = index;
         });
     }
 
@@ -202,6 +205,7 @@ export class SourceData {
     }
 
     filteredRows() {
-        return this.rows.filter(row => row['Census year'] === this.activeCensusYear && row['CLUE small area'] !== 'City of Melbourne total');
+        return this.rows.filter(this.filter);
+        //return this.rows.filter(row => row['Census year'] === this.activeCensusYear && row['CLUE small area'] !== 'City of Melbourne total');
     }
 }

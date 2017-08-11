@@ -6,7 +6,7 @@ import { FlightPath } from './flightPath';
 import { spin } from './flightPath';
 import { datasets } from './cycleDatasets';
 import { MapVis } from './mapVis';
-console.log(datasets);
+//console.log(datasets);
 //mapboxgl.accessToken = 'pk.eyJ1Ijoic3RldmFnZSIsImEiOiJjaXhxcGs0bzcwYnM3MnZsOWJiajVwaHJ2In0.RN7KywMOxLLNmcTFfn0cig';
 mapboxgl.accessToken = 'pk.eyJ1IjoiY2l0eW9mbWVsYm91cm5lIiwiYSI6ImNpejdob2J0czAwOWQzM21ubGt6MDVqaHoifQ.55YbqeTHWMK_b6CEAmoUlA';
 /*
@@ -19,7 +19,7 @@ Bike share stations: http://localhost:3002/#tdvh-n9dv
 DAM: http://localhost:3002/#gh7s-qda8
 */
 
-let def = (a, b) => a !== undefined ? a : b;
+let def = (a, b) => a !== undefined && a !== null ? a : b;
 
 let whenMapLoaded = (map, f) => map.loaded() ? f() : map.once('load', f);
 
@@ -284,9 +284,10 @@ Each dataset is pre-loaded by being "shown" invisible (opacity 0), then "reveale
 
 */
 function nextDataset(map, datasetNo, removeFirst) {
+    const speedUp = 1;
     // Invisibly load dataset into the map.
     function delay(f, ms) {
-        window.setTimeout(() => !window.stopped && f(), ms);
+        window.setTimeout(() => !window.stopped && f(), ms * speedUp);
     }
 
     _datasetNo = datasetNo;
@@ -322,13 +323,13 @@ function nextDataset(map, datasetNo, removeFirst) {
     // We're aiming to arrive at the viewpoint 1/3 of the way through the dataset's appearance
     // and leave 2/3 of the way through.
     if (d.flyTo && !map.isMoving()) {
-        d.flyTo.duration = d.delay/3;// so it lands about a third of the way through the dataset's visibility.
+        d.flyTo.duration = speedUp * (d.delay / 3);// so it lands about a third of the way through the dataset's visibility.
         map.flyTo(d.flyTo, { source: 'nextDataset'});
     }
     
     if (nextD.flyTo) {
         // got to be careful if the data overrides this,
-        nextD.flyTo.duration = def(nextD.flyTo.duration, d.delay/3 + nextD.delay/3);// so it lands about a third of the way through the dataset's visibility.
+        nextD.flyTo.duration = def(nextD.flyTo.duration, speedUp * (d.delay/3 + nextD.delay/3));// so it lands about a third of the way through the dataset's visibility.
         delay(() => map.flyTo(nextD.flyTo, { source: 'nextDataset'}), d.delay * 2/3);
     }
 
@@ -366,7 +367,7 @@ function setupMap(options) {
         style: 'mapbox://styles/cityofmelbourne/ciz983lqo001w2ss2eou49eos?fresh=5',
         center: [144.95, -37.813],
         zoom: 13,//13
-        pitch: 45, // TODO revert for flat
+        pitch: options.demoMode ? 45 : 0,
         attributionControl: false
     });
     map.addControl(new mapboxgl.AttributionControl({compact:true}), 'top-right');

@@ -154,7 +154,7 @@ CoM.enumColors = [CoM.blue, CoM.magenta, CoM.green];
 
 import { SourceData } from './sourceData';
 
-export const datasets = [
+export let datasets = [
     {
         delay:5000,
         caption:'Melbourne has a lot of data, ready for you to access and use through our Open Data Platform.',
@@ -203,7 +203,7 @@ export const datasets = [
     // repeat - just to force the timing
     { 
         delay:10000,
-        linger:3000,
+        linger:1000,
         name: 'Property boundaries',
         caption: 'We have data about property boundaries that we use for planning',
         opacity:1,
@@ -859,6 +859,13 @@ const crappyFinale = [
 
 ];
 */
+
+const speedUp = 1/3;
+datasets.forEach(dataset => {
+    dataset.delay = dataset.delay / speedUp;
+    if (dataset.linger)
+        dataset.linger = dataset.linger / speedUp;
+});
 
 const unused = [
 {
